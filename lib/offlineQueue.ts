@@ -118,6 +118,17 @@ export interface QueuedSubmissionLocal {
   /** When the order was taken on the device. Optional — defaulted on enqueue. */
   createdAt?: number;
   lines?: QueuedLineMeta[];
+  /**
+   * Payment taken on the device while the order was still queued.
+   *
+   * Kept on the local snapshot rather than in the payload: the API's order
+   * schema only knows the fields it validates, and the queue replay posts the
+   * payload verbatim. Recording a tender here lets staff settle a queued order
+   * offline without teaching the server about fields it has never seen.
+   */
+  paymentMethod?: number;
+  paymentReference?: string;
+  amountPaid?: number;
 }
 
 const STORAGE_KEY = 'pendingSubmissions';

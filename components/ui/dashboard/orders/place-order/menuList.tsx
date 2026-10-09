@@ -34,6 +34,11 @@ import OrderMenuToolbar from "./OrderMenuToolbar";
 import OrderItemsGrid from "./OrderItemsGrid";
 import CustomPagination from "../../settings/BillingsComponents/CustomPagination";
 import { getMenuItems } from "@/app/api/controllers/dashboard/menu";
+import { getQueuedItem } from "@/lib/offlineQueue";
+import { toQueuedOrderView } from "@/lib/queuedOrder";
+import { isNetworkOnline } from "@/lib/connectivity";
+import { PersistentCache } from "@/lib/persistentCache";
+import useNetworkOnline from "@/hooks/useNetworkOnline";
 
 type Item = {
   id: string;
@@ -56,14 +61,18 @@ type Item = {
 };
 
 
-// Global cache for order menu items
-const globalOrderItemsCache = new Map<string, { 
-  items: any[], 
+// Order menu items grouped by section + page. Persisted so the sections a user
+// already opened survive a reload and stay viewable offline.
+type CachedOrderItems = {
+  items: any[],
   timestamp: number,
   totalPages: number,
   totalItems: number,
-  currentPage: number 
-}>();
+  currentPage: number
+};
+const globalOrderItemsCache = new PersistentCache<CachedOrderItems>('order-items', {
+  maxEntries: 60,
+});
 const GLOBAL_CACHE_EXPIRY_TIME = 10 * 60 * 1000; // 10 minutes
 
 // Cache validation helper
@@ -110,6 +119,10 @@ const retryWithBackoff = async (
 const MenuList = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // `add-items` mode is reached from UpdateOrderModal. A queued order carries a
+  // `queueId` instead of a server `orderId`, so it hydrates from the local queue.
+  const addItemsMode = searchParams.get('mode') === 'add-items';
+  const queueId = searchParams.get('queueId');
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const {
     setCurrentMenuItems,
@@ -137,6 +150,16 @@ const MenuList = () => {
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
   
   const [filterValue, setFilterValue] = React.useState("");
+
+  const isOnline = useNetworkOnline();
+
+  // A cached page is usable while fresh — or at any age while offline, where
+  // items loaded earlier beat a request that cannot succeed.
+  const isCacheUsable = (cached: CachedOrderItems | undefined): boolean => {
+    if (!cached) return false;
+    if (!isNetworkOnline()) return true;
+    return Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME;
+  };
 
   // Transform categories data
   useEffect(() => {
@@ -193,7 +216,7 @@ const MenuList = () => {
           const cacheKey = `${firstSection.id}_page_1`;
           const cached = globalOrderItemsCache.get(cacheKey);
           
-          if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME) && validateCacheData(cached)) {
+          if (cached && isCacheUsable(cached) && validateCacheData(cached)) {
             // Use cache if available and valid
             setMenuItems(cached.items);
             setTotalPages(cached.totalPages);
@@ -258,7 +281,10 @@ const MenuList = () => {
   // Function to fetch first item with priority (for initial load only)
   const fetchFirstItemPriority = async (sectionId: string) => {
     if (!sectionId) return false;
-    
+
+    // Offline the request cannot succeed; let the caller fall back to cache.
+    if (!isNetworkOnline()) return false;
+
     try {
       // Clear any previous errors
       // Fetch just the first item for immediate display with retry
@@ -306,6 +332,12 @@ const MenuList = () => {
     
     setTimeout(async () => {
       try {
+        // Offline this can only fail; the priority fetch or cache already
+        // covers what is on screen, so skip the doomed request.
+        if (!isNetworkOnline()) {
+          setLoadingItems(false);
+          return;
+        }
         const response = await retryWithBackoff(
           () => getMenuItems(sectionId, page, pageSize),
           2, // fewer retries for background loading
@@ -368,6 +400,10 @@ const MenuList = () => {
   // Preload other sections in background
   const preloadOtherSections = async (sections: any[], currentSectionId: string) => {
     if (!sections || sections.length <= 1) return;
+
+    // Preloading is speculative: offline every request would fail and only
+    // compete with the actions the user is actually taking.
+    if (!isNetworkOnline()) return;
     
     // Filter out current section and empty sections
     const sectionsToPreload = sections.filter(s => s.id !== currentSectionId && s.totalCount > 0);
@@ -413,6 +449,28 @@ const MenuList = () => {
     });
   };
 
+  // Preloading is skipped while offline (see preloadOtherSections). When the
+  // connection returns, warm whatever is still missing so sections that never
+  // got prefetched catch up instead of staying empty.
+  const wasOffline = React.useRef(false);
+  useEffect(() => {
+    if (!isOnline) {
+      wasOffline.current = true;
+      return;
+    }
+    if (!wasOffline.current || !hasInitialized) return;
+    wasOffline.current = false;
+
+    const missingSections = (menuSections || []).filter(
+      (section: any) =>
+        section.totalCount > 0 && !globalOrderItemsCache.has(`${section.id}_page_1`)
+    );
+    if (missingSections.length > 0) {
+      preloadOtherSections(missingSections, activeSubCategory);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOnline, hasInitialized, menuSections, activeSubCategory]);
+
   // Fetch menu items for a section with comprehensive error handling
   const fetchMenuItems = async (sectionId: string, page: number = 1) => {
     if (!sectionId) {
@@ -424,7 +482,7 @@ const MenuList = () => {
     
     // Check cache first with validation
     const cached = globalOrderItemsCache.get(cacheKey);
-    if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME) && validateCacheData(cached)) {
+    if (cached && isCacheUsable(cached) && validateCacheData(cached)) {
       try {
         setMenuItems(cached.items);
         setTotalPages(cached.totalPages);
@@ -441,6 +499,23 @@ const MenuList = () => {
     } else if (cached && !validateCacheData(cached)) {
       console.warn('Invalid cache data detected, removing:', cacheKey);
       globalOrderItemsCache.delete(cacheKey); // Remove invalid cache
+    }
+
+    // Offline, don't fire a request that can only fail. Serve whatever was
+    // loaded earlier, or say plainly that there is nothing to show.
+    if (!isNetworkOnline()) {
+      const fallback = globalOrderItemsCache.get(cacheKey);
+      if (fallback && validateCacheData(fallback)) {
+        setMenuItems(fallback.items);
+        setTotalPages(fallback.totalPages);
+        setTotalItems(fallback.totalItems);
+        setCurrentPage(fallback.currentPage);
+        setCurrentMenuItems(fallback.items);
+      } else {
+        toast.error("You're offline — menu items couldn't be loaded");
+        setMenuItems([]);
+      }
+      return;
     }
 
     setLoadingItems(true);
@@ -511,7 +586,11 @@ const MenuList = () => {
         // Update global context
         setCurrentMenuItems(transformedItems);
       } else {
-        console.error('API returned unsuccessful response:', response?.data);
+        // Offline the controller resolves undefined; that is expected, not an
+        // application error, and the dev overlay would surface it loudly.
+        if (isNetworkOnline()) {
+          console.error('API returned unsuccessful response:', response?.data);
+        }
         throw new Error(response?.data?.message || 'API request failed');
       }
     } catch (error) {
@@ -614,7 +693,7 @@ const MenuList = () => {
           // Check cache first like menu page
           const cacheKey = `${allMenuSections[0].id}_page_1`;
           const cached = globalOrderItemsCache.get(cacheKey);
-          if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME) && validateCacheData(cached)) {
+          if (cached && isCacheUsable(cached) && validateCacheData(cached)) {
             setMenuItems(cached.items);
             setTotalPages(cached.totalPages);
             setTotalItems(cached.totalItems);
@@ -668,7 +747,7 @@ const MenuList = () => {
       // Check cache first for page 1
       const cacheKey = `${sectionId}_page_1`;
       const cached = globalOrderItemsCache.get(cacheKey);
-      if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME) && validateCacheData(cached)) {
+      if (cached && isCacheUsable(cached) && validateCacheData(cached)) {
         setMenuItems(cached.items);
         setTotalPages(cached.totalPages);
         setTotalItems(cached.totalItems);
@@ -836,6 +915,13 @@ const MenuList = () => {
   useEffect(() => {
     // Check if we're in add-items mode (coming from UpdateOrderModal)
     const isAddItemsMode = searchParams.get('mode') === 'add-items';
+    const queuedId = searchParams.get('queueId');
+
+    // A queued order is hydrated from localStorage below instead; fetching the
+    // server with its queue id would 404.
+    if (isAddItemsMode && queuedId) {
+      return;
+    }
 
     if (isAddItemsMode && order?.id && categories && categories.length > 0) {
       // Only load order details if explicitly adding items to an existing order
@@ -847,6 +933,58 @@ const MenuList = () => {
       setOrder(null);
     }
   }, [order?.id, categories, searchParams]);
+
+  // Hydrates the cart and customer header for a queued order from the queue
+  // entry, since there is no server record to fetch. Runs once per queue id.
+  useEffect(() => {
+    if (!addItemsMode || !queueId) return;
+
+    const queued = getQueuedItem(queueId);
+    const view = queued ? toQueuedOrderView(queued) : null;
+
+    if (!view) {
+      toast.error('Queued order not found');
+      return;
+    }
+
+    setSelectedItems(
+      view.lines.map((line) => ({
+        id: line.itemID,
+        itemID: line.itemID,
+        itemName: line.itemName,
+        menuName: line.menuName || '',
+        itemDescription: '',
+        price: line.unitPrice,
+        currency: view.currency || 'NGN',
+        isAvailable: true,
+        hasVariety: false,
+        image: '',
+        isVariety: false,
+        varieties: null,
+        count: line.quantity,
+        packingCost: line.packingCost,
+        isPacked: line.isPacked,
+        comment: line.comment,
+        originalCount: line.quantity,
+      }))
+    );
+
+    setOrderDetails({
+      id: queueId,
+      placedByName: view.customerName,
+      placedByPhoneNumber: view.customerPhone,
+      quickResponseID: view.table,
+      qrReference: view.table,
+      comment: view.comment,
+      additionalCost: view.additionalCost,
+      additionalCostName: view.additionalCostName,
+      vatAmount: view.vatAmount,
+      isVatApplied: view.isVatApplied,
+      // Carry any payment already recorded on the device so a later settlement
+      // only charges the outstanding balance rather than the full total again.
+      amountPaid: Number(queued?.local?.amountPaid) || 0,
+    });
+  }, [addItemsMode, queueId]);
 
   // Cleanup debounce timer on unmount
   useEffect(() => {
@@ -1165,7 +1303,9 @@ const MenuList = () => {
           selectedItems={selectedItems}
           onOpenChange={onOpenChange}
           isOpen={isOpen}
-          id={order?.id}
+          id={queueId ? undefined : order?.id}
+          isQueued={!!queueId}
+          queueId={queueId || undefined}
           orderDetails={orderDetails}
           handlePackingCost={handlePackingCost}
           handleItemComment={handleItemComment}

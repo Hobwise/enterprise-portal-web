@@ -7,10 +7,33 @@ import { notify, clearAppStorage } from '@/lib/utils';
 import { trackSignUpStarted } from '@/lib/posthogAnalytics';
 import { Spacer, Tooltip } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaRegEnvelope } from 'react-icons/fa6';
 import { LuArrowRight } from 'react-icons/lu';
 import { useQueryClient } from '@tanstack/react-query';
+
+// Query-string keys that can carry a referral code in the signup link,
+// e.g. /auth/signup?referral-code=HOB-C5VKRG
+const REFERRAL_CODE_QUERY_KEYS = ["referral-code", "referralCode", "referral"];
+
+// Referral links sometimes arrive as "?referral-code=?HOB-C5VKRG"; strip the
+// stray "?"/whitespace so we only keep the actual code.
+const sanitizeReferralCode = (value: string | null) => {
+  if (!value) return "";
+  return value.replace(/^[?\s]+/, "").trim().toUpperCase();
+};
+
+const getReferralCodeFromUrl = () => {
+  if (typeof window === "undefined") return "";
+
+  const params = new URLSearchParams(window.location.search);
+  for (const key of REFERRAL_CODE_QUERY_KEYS) {
+    const code = sanitizeReferralCode(params.get(key));
+    if (code) return code;
+  }
+
+  return "";
+};
 
 const SignupForm = () => {
   const router = useRouter();
@@ -25,9 +48,21 @@ const SignupForm = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    referralCode: "",
     role: 0,
     isActive: false,
   });
+
+  // Auto-fill the referral code when a visitor lands via a referral link.
+  useEffect(() => {
+    const referralCode = getReferralCodeFromUrl();
+    if (referralCode) {
+      setSignupFormData((prevFormData) => ({
+        ...prevFormData,
+        referralCode,
+      }));
+    }
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
@@ -178,6 +213,21 @@ const SignupForm = () => {
         classnames="h-[58px] rounded-xl border border-secondaryColor/40 lg:border-transparent lg:shadow-[0_1px_2px_rgba(16,24,40,0.05)] data-[hover=true]:!border-secondaryColor/60 data-[focus=true]:!border-secondaryColor"
         inputTextColor="text-white lg:text-[#1F2937]"
         eyeIconStyle="text-base text-white/70 lg:text-[#1F2937]"
+      />
+
+      <Spacer y={4} />
+
+      <CustomInput
+        type="text"
+        name="referralCode"
+        value={signupFormData.referralCode}
+        onChange={handleInputChange}
+        label=""
+        placeholder="Referral code (optional)"
+        autoComplete="off"
+        bgColor="bg-transparent lg:bg-white"
+        classnames="h-[58px] rounded-xl border border-secondaryColor/40 lg:border-transparent lg:shadow-[0_1px_2px_rgba(16,24,40,0.05)] data-[hover=true]:!border-secondaryColor/60 data-[focus=true]:!border-secondaryColor"
+        inputTextColor="text-white lg:text-[#1F2937]"
       />
 
       <Spacer y={6} />
