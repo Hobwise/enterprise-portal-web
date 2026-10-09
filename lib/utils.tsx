@@ -24,6 +24,7 @@ import { saveAs } from "file-saver";
 
 import LoadingAvatar from "../public/assets/images/loadingAvatar.svg";
 import { companyInfo } from "./companyInfo";
+import { clearPersistentCaches } from "./persistentCache";
 import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
 import { RefObject } from "react";
@@ -88,6 +89,10 @@ export const clearAppStorage = (): void => {
   for (const [key, value] of Object.entries(preserved)) {
     if (value !== null) localStorage.setItem(key, value);
   }
+
+  // Caches are hydrated into module scope, so wiping localStorage alone would
+  // leave the previous session's menu/orders data live until a reload.
+  clearPersistentCaches();
 };
 
 export const getJsonItemFromLocalStorage = (name: string) => {

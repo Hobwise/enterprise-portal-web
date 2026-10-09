@@ -45,9 +45,9 @@ import { MdKeyboardArrowRight } from "react-icons/md";
 import noImage from "../../../../../public/assets/images/no-image.svg";
 import { ordersCacheUtils } from "@/hooks/cachedEndpoints/useOrder";
 import useOrderConfiguration from "@/hooks/cachedEndpoints/useOrderConfiguration";
-import { getQueuedItem, type QueuedSubmissionLocal } from "@/lib/offlineQueue";
+import { getQueuedItem, updateQueuedItem, type QueuedSubmissionLocal } from "@/lib/offlineQueue";
 import QueuedOrderInvoice from "@/components/offline/QueuedOrderInvoice";
-import { toQueuedOrderView } from "@/lib/queuedOrder";
+import { applyQueuedOrderEdits, toQueuedOrderView } from "@/lib/queuedOrder";
 
 interface Order {
   placedByName: string;
@@ -108,6 +108,9 @@ const CheckoutModal = ({
   handlePackingCost,
   handleItemComment,
   categoriesData,
+  isQueued,
+  queueId,
+  onQueuedEdit,
 }: any) => {
   const businessInformation = getJsonItemFromLocalStorage("business");
   const userInformation = getJsonItemFromLocalStorage("userInformation");
@@ -311,6 +314,15 @@ const CheckoutModal = ({
 
     // Process the order and wait for completion
     try {
+      // A queued order has no server record yet; "checkout" just commits the
+      // edited basket back to the local queue before the payment screen.
+      if (isQueued && queueId) {
+        await saveQueuedOrderEdits();
+        setLoading(false);
+        setScreen(2);
+        return;
+      }
+
       if (id) {
         await updateOrder();
         resetCheckoutState();
@@ -332,6 +344,15 @@ const CheckoutModal = ({
   // popup so the customer can pay online with a card. On success the order list
   // is refreshed (the backend confirms the payment against the order via webhook).
   const handlePayNow = async () => {
+    if (isQueued) {
+      notify({
+        title: "Unavailable",
+        text: "Online payment can't be started for a queued order. It will be available once the order syncs.",
+        type: "error",
+      });
+      return;
+    }
+
     if (!orderId) {
       notify({
         title: "Error!",
@@ -402,6 +423,15 @@ const CheckoutModal = ({
   };
 
   const handleClick = async (methodId: number) => {
+    if (methodId === PAY_NOW_ID && isQueued) {
+      notify({
+        title: "Unavailable",
+        text: "Online payment can't be started for a queued order. It will be available once the order syncs.",
+        type: "error",
+      });
+      return;
+    }
+
     // Clear all screen tracking states after any payment action
     const clearScreenStates = () => {
       resetCheckoutState();
@@ -558,6 +588,9 @@ const CheckoutModal = ({
     (methodId === PAY_NOW_ID && payNowLoading) ||
     (methodId === 5 && qrPaymentLoading);
   const isPaymentBusy = isPayLaterLoading || payNowLoading || qrPaymentLoading;
+  // Online payment needs a live server order; a queued one has none, so Pay Now
+  // is shown but disabled until the order syncs.
+  const isMethodDisabled = (methodId: number) => methodId === PAY_NOW_ID && !!isQueued;
 
   // Calculate detailed total price directly from selectedItems to ensure accuracy
   const calculateDetailedTotalPrice = (): {
@@ -789,6 +822,73 @@ const CheckoutModal = ({
     return { isValid: errors.length === 0, errors };
   };
 
+  // A queued order has no server record, so edits are written straight back to
+  // the local queue entry rather than through the API. `onQueuedEdit` (the
+  // reactive hook in the orders table) is preferred so the list refreshes
+  // immediately; the low-level writer is the fallback for entry points such as
+  // the menu page that only have the queue id.
+  const persistQueuedEdit = (
+    edits: { payload?: Record<string, any>; local?: QueuedSubmissionLocal }
+  ): boolean => {
+    if (!queueId) return false;
+    if (typeof onQueuedEdit === "function") return Boolean(onQueuedEdit(queueId, edits));
+    return Boolean(updateQueuedItem(queueId, edits));
+  };
+
+  // Rebuilds the queue entry's lines from the (possibly edited) cart. Names are
+  // carried through so the offline invoice keeps readable line items.
+  const saveQueuedOrderEdits = async () => {
+    if (!queueId) return;
+
+    const item = getQueuedItem(queueId);
+    if (!item) {
+      notify({ title: "Error", text: "Queued order not found", type: "error" });
+      return;
+    }
+
+    const lineMap = new Map<string, {
+      itemID: string;
+      itemName: string;
+      menuName?: string;
+      quantity: number;
+      unitPrice: number;
+      isPacked: boolean;
+      packingCost: number;
+      comment: string;
+    }>();
+
+    selectedItems.forEach((cartItem: any) => {
+      const finalItemID = cartItem.isVariety ? cartItem.id : cartItem.itemID || cartItem.id;
+      const existing = lineMap.get(finalItemID);
+      if (existing) {
+        existing.quantity += cartItem.count;
+        if (!existing.comment && cartItem.comment) existing.comment = cartItem.comment;
+      } else {
+        lineMap.set(finalItemID, {
+          itemID: finalItemID,
+          itemName: cartItem.itemName || "",
+          menuName: cartItem.menuName,
+          quantity: cartItem.count,
+          unitPrice: cartItem.price,
+          isPacked: !!cartItem.isPacked,
+          packingCost: cartItem.packingCost || 0,
+          comment: cartItem.comment || "",
+        });
+      }
+    });
+
+    const { payload, local } = applyQueuedOrderEdits(item, {
+      customerName: order.placedByName?.trim() || "anonymous",
+      customerPhone: order.placedByPhoneNumber?.trim() || "",
+      table: order.quickResponseID,
+      comment: order.comment,
+      additionalCost: Math.round((Number(additionalCost) || 0) * 100) / 100,
+      lines: Array.from(lineMap.values()),
+    });
+
+    persistQueuedEdit({ payload, local });
+  };
+
   // Wipes every per-order field so the next checkout starts from a blank sheet.
   // Without this the previous customer's name, phone and table stay prefilled
   // and the next order is silently made against the wrong table.
@@ -985,7 +1085,7 @@ const CheckoutModal = ({
     if (data && (data as any).queued) {
       notify({
         title: "Saved offline",
-        text: "No connection available. Your order was saved and will be sent automatically when you're back online. You can view, edit or print it from the offline orders button.",
+        text: "No connection available. Your order was saved and will be sent automatically when you're back online. You can find it in your orders list.",
         type: "success",
       });
       resetCheckoutState();
@@ -1321,6 +1421,71 @@ const CheckoutModal = ({
           validation.errors.join(", "),
         type: "error",
       });
+      return;
+    }
+
+    // A queued order is settled on the device: there is no server order to pay
+    // against, so record the tender on the queue entry's local snapshot and
+    // close. `saveQueuedOrderEdits` already committed the basket.
+    if (isQueued && queueId) {
+      const priorAmountPaid = Number(orderDetails?.amountPaid) || 0;
+      const queuedTotalDue = Math.max(0, finalTotalPrice - priorAmountPaid);
+      let queuedAmountPaid = queuedTotalDue;
+
+      if (paymentOption === "partial") {
+        const amount = parseFloat(amountPaid.replace(/,/g, ""));
+        if (!amount || isNaN(amount) || amount <= 0) {
+          notify({
+            title: "Validation Error",
+            text: "Please enter a valid amount for partial payment",
+            type: "error",
+          });
+          return;
+        }
+        if (amount > queuedTotalDue) {
+          notify({
+            title: "Payment Error",
+            text: "Amount received cannot be greater than the pending order amount",
+            type: "error",
+          });
+          return;
+        }
+        queuedAmountPaid = amount;
+      }
+
+      const existing = getQueuedItem(queueId);
+      if (existing) {
+        // `amountPaid` is read back as a cumulative total (the row derives
+        // `amountRemaining` from it), so add this tender to whatever was already
+        // recorded rather than replacing it — otherwise a second/partial payment
+        // would make the row look like it still owes money.
+        const alreadyPaid = Number(existing.local?.amountPaid) || 0;
+        persistQueuedEdit({
+          local: {
+            ...(existing.local ?? {}),
+            paymentMethod: selectedPaymentMethod,
+            paymentReference: reference,
+            amountPaid: Math.round((alreadyPaid + queuedAmountPaid) * 100) / 100,
+          },
+        });
+      }
+
+      notify({
+        title: "Payment recorded",
+        text: "Payment recorded against the queued order. It will be finalised when the order syncs.",
+        type: "success",
+      });
+
+      setScreen(1);
+      setOrderId("");
+      setReference("");
+      setSelectedPaymentMethod(0);
+      try {
+        onOrderSuccess?.();
+      } catch (e) {
+        console.error("Error in onOrderSuccess callback:", e);
+      }
+      onOpenChange(false);
       return;
     }
 
@@ -2512,14 +2677,16 @@ const CheckoutModal = ({
                         <div
                           key={item.id}
                           onClick={() =>
-                            !isPaymentBusy && handleClick(item.id)
+                            !isPaymentBusy &&
+                            !isMethodDisabled(item.id) &&
+                            handleClick(item.id)
                           }
                           className={`flex items-center gap-2 p-4 rounded-lg justify-between ${
                             selectedPaymentMethod === item.id
                               ? "bg-[#EAE5FF80]"
                               : ""
                           } ${
-                            isPaymentBusy
+                            isPaymentBusy || isMethodDisabled(item.id)
                               ? "cursor-not-allowed opacity-50"
                               : "cursor-pointer"
                           }`}
@@ -2580,14 +2747,16 @@ const CheckoutModal = ({
                           <div
                             key={item.id}
                             onClick={() =>
-                              !isPaymentBusy && handleClick(item.id)
+                              !isPaymentBusy &&
+                              !isMethodDisabled(item.id) &&
+                              handleClick(item.id)
                             }
                             className={`flex items-center gap-3 p-5 rounded-lg border justify-between transition-all ${
                               selectedPaymentMethod === item.id
                                 ? "bg-[#EAE5FF80] border-primaryColor"
                                 : "border-gray-200"
                             } ${
-                              isPaymentBusy
+                              isPaymentBusy || isMethodDisabled(item.id)
                                 ? "cursor-not-allowed opacity-50"
                                 : "cursor-pointer active:scale-95"
                             }`}

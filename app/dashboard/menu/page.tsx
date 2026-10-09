@@ -21,6 +21,9 @@ import {
 } from '@/app/api/controllers/dashboard/menu';
 import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
 import { getJsonItemFromLocalStorage, dynamicExportConfig, notify } from '@/lib/utils';
+import { isNetworkOnline } from '@/lib/connectivity';
+import { PersistentCache } from '@/lib/persistentCache';
+import useNetworkOnline from '@/hooks/useNetworkOnline';
 
 const toast = {
   success: (text: string) => notify({ text, type: 'success' }),
@@ -46,18 +49,24 @@ import AddItemChoiceModal from '@/components/ui/dashboard/menu/modals/AddItemCho
 import AddMultipleItemsModal from '@/components/ui/dashboard/menu/modals/AddMultipleItemsModal';
 import CustomPagination from '@/components/ui/dashboard/settings/BillingsComponents/CustomPagination';
 
-// Global cache for menu items to persist across category switches
-const globalMenuItemsCache = new Map<string, { 
-  items: any[], 
+// Menu items grouped by section + page. Backed by localStorage so the sections
+// a user already opened survive a reload — offline that is the difference
+// between the menu they were just looking at and an empty grid.
+type CachedMenuItems = {
+  items: any[],
   timestamp: number,
   totalPages: number,
   totalItems: number,
-  currentPage: number 
-}>();
+  currentPage: number
+};
+const globalMenuItemsCache = new PersistentCache<CachedMenuItems>('menu-items', {
+  maxEntries: 60,
+});
 const GLOBAL_CACHE_EXPIRY_TIME = 10 * 60 * 1000; // 10 minutes
 
 const RestaurantMenu = () => {
   const router = useRouter();
+  const isOnline = useNetworkOnline();
   const { userRolePermissions, role, isLoading: isPermissionsLoading } = usePermission();
   const {
     setCurrentMenuItems,
@@ -188,6 +197,16 @@ const RestaurantMenu = () => {
     return Date.now() - timestamp < CACHE_EXPIRY_TIME;
   };
 
+  // A cached page is usable while fresh — or at any age while offline, where
+  // items loaded earlier beat a request that cannot succeed.
+  const isCacheUsable = (
+    cached: { timestamp: number } | undefined
+  ): cached is { timestamp: number } => {
+    if (!cached) return false;
+    if (!isNetworkOnline()) return true;
+    return Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME;
+  };
+
   // Helper function to update menu section count
   const updateMenuSectionCount = (sectionId: string, delta: number) => {
     setMenuSections(prevSections => 
@@ -203,6 +222,11 @@ const RestaurantMenu = () => {
   const preloadMenuSections = async (sections: any[], priority: boolean = false) => {
     if (!sections || sections.length === 0) return;
 
+    // Preloading is a luxury: offline, every request in this loop would fail
+    // and only compete with the page the user is actually trying to use. Skip
+    // the run — the reconnect effect below picks up whatever was missed.
+    if (!isNetworkOnline()) return;
+
     if (!priority) {
       setIsPreloading(true);
     }
@@ -213,6 +237,10 @@ const RestaurantMenu = () => {
 
       // Process sequentially to avoid overwhelming the server/browser
       for (const section of sections) {
+        // Connection dropped mid-run: stop instead of walking the rest of the
+        // list against a dead network.
+        if (!isNetworkOnline()) break;
+
         // Check global cache first using the correct page_1 key
         const cacheKey = `${section.id}_page_1`;
         const cached = globalMenuItemsCache.get(cacheKey);
@@ -377,6 +405,10 @@ const RestaurantMenu = () => {
       } catch (error) {
         console.error('Error fetching remaining items:', error);
         setLoadingItems(false);
+        // One clear reason for the empty grid instead of a silent blank page.
+        if (!isNetworkOnline()) {
+          toast.error("You're offline — menu items couldn't be loaded");
+        }
       }
     }, 100); // Small delay to ensure first item displays immediately
   };
@@ -391,7 +423,7 @@ const RestaurantMenu = () => {
     if (!forceRefresh) {
       const cacheKey = `${menuSectionId}_page_${pageToFetch}`;
       const cached = globalMenuItemsCache.get(cacheKey);
-      if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME)) {
+      if (isCacheUsable(cached)) {
         setMenuItems(cached.items);
         setTotalPages(cached.totalPages);
         setTotalItems(cached.totalItems);
@@ -462,8 +494,18 @@ const RestaurantMenu = () => {
       }
     } catch (error) {
       console.error('Error fetching menu items:', error);
-      toast.error('Failed to load menu items');
-      setMenuItems([]);
+      if (!isNetworkOnline()) {
+        // Offline: keep whatever is already on screen instead of blanking the
+        // grid, and say why rather than repeating a generic failure.
+        toast.error(
+          menuItems.length > 0
+            ? "You're offline — showing items loaded earlier"
+            : "You're offline — menu items couldn't be loaded"
+        );
+      } else {
+        toast.error('Failed to load menu items');
+        setMenuItems([]);
+      }
     } finally {
       setLoadingItems(false);
     }
@@ -493,7 +535,7 @@ const RestaurantMenu = () => {
             const cacheKey = `${sections[0].id}_page_1`;
             const cached = globalMenuItemsCache.get(cacheKey);
             
-            if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME)) {
+            if (isCacheUsable(cached)) {
               // Use cache if available
               setMenuItems(cached.items);
               setTotalPages(cached.totalPages || 1);
@@ -523,8 +565,9 @@ const RestaurantMenu = () => {
             }, 1000); // 1-second delay to ensure the initial category has completely painted
           } else {
             // Normal cache check for subsequent loads
-            const cached = globalMenuItemsCache.get(sections[0].id);
-            if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME)) {
+            // (keys are always written as `${sectionId}_page_${page}`)
+            const cached = globalMenuItemsCache.get(`${sections[0].id}_page_1`);
+            if (isCacheUsable(cached)) {
               setMenuItems(cached.items);
               setTotalPages(cached.totalPages || 1);
               setTotalItems(cached.totalItems || 0);
@@ -563,7 +606,7 @@ const RestaurantMenu = () => {
           // Check global cache first with page info
           const cacheKey = `${firstSection.id}_page_1`;
           const cached = globalMenuItemsCache.get(cacheKey);
-          if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME)) {
+          if (isCacheUsable(cached)) {
             setMenuItems(cached.items);
             setTotalPages(cached.totalPages || 1);
             setTotalItems(cached.totalItems || 0);
@@ -600,7 +643,7 @@ const RestaurantMenu = () => {
     // Check global cache first for page 1
     const cacheKey = `${sectionId}_page_1`;
     const cached = globalMenuItemsCache.get(cacheKey);
-    if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME)) {
+    if (isCacheUsable(cached)) {
       setMenuItems(cached.items);
       setTotalPages(cached.totalPages || 1);
       setTotalItems(cached.totalItems || 0);
@@ -617,6 +660,33 @@ const RestaurantMenu = () => {
       }
     }
   };
+
+  // Preloading is skipped while the connection is down (see
+  // preloadMenuSections). When it comes back, warm whatever is still missing so
+  // the sub-tabs that never got prefetched catch up instead of staying empty.
+  const wasOffline = React.useRef(false);
+  useEffect(() => {
+    if (!isOnline) {
+      wasOffline.current = true;
+      return;
+    }
+    if (!wasOffline.current || !hasInitialized) return;
+    wasOffline.current = false;
+
+    const missingSections: any[] = [];
+    categories.forEach((category: any) => {
+      const catSections = category.menus?.[0]?.menuSections || [];
+      catSections.forEach((section: any) => {
+        if (!globalMenuItemsCache.has(`${section.id}_page_1`)) {
+          missingSections.push(section);
+        }
+      });
+    });
+
+    if (missingSections.length > 0) {
+      preloadMenuSections(missingSections, false);
+    }
+  }, [isOnline, hasInitialized, categories]);
 
   const handleDrag = (e: React.DragEvent, setActive: (value: boolean) => void) => {
     e.preventDefault();

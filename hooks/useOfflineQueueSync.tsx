@@ -13,8 +13,8 @@
  *
  * The queue lives in localStorage and has no other source of truth, so this hook
  * re-reads it after every mutation and on a storage event (another tab editing or
- * discarding an order). That is what lets the offline orders panel show, edit and
- * retry queued items instead of only counting them.
+ * discarding an order). That is what keeps the status pill and the queued rows in
+ * the orders list in step with the queue.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';

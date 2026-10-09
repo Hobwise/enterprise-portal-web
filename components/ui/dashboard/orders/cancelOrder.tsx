@@ -13,12 +13,14 @@ import Image from "next/image";
 import { useState } from "react";
 import noMenu from "../../../../public/assets/images/no-menu.png";
 import { ordersCacheUtils } from "@/hooks/cachedEndpoints/useOrder";
+import { deleteQueuedItem } from "@/lib/offlineQueue";
 
 const CancelOrderModal = ({
   isOpenCancelOrder,
   singleOrder,
   toggleCancelModal,
   refetch,
+  discardQueued,
 }: any) => {
   const queryClient = useQueryClient();
   const userInformation = getJsonItemFromLocalStorage("userInformation");
@@ -26,6 +28,24 @@ const CancelOrderModal = ({
 
   const handleCancel = async () => {
     setLoading(true);
+
+    // A queued order exists only on the device, so cancelling it simply discards
+    // the queue entry — there is no server record to cancel.
+    if (singleOrder?.isQueued && singleOrder?.queueId) {
+      if (typeof discardQueued === "function") {
+        discardQueued(singleOrder.queueId);
+      } else {
+        deleteQueuedItem(singleOrder.queueId);
+      }
+      setLoading(false);
+      notify({
+        title: "Success!",
+        text: "Queued order discarded",
+        type: "success",
+      });
+      toggleCancelModal();
+      return;
+    }
 
     const payload = {
       treatedBy: `${userInformation.firstName}  ${userInformation.lastName}`,

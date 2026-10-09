@@ -1,6 +1,8 @@
 'use client';
 import { getOrderCategories, getOrderDetails } from '@/app/api/controllers/dashboard/orders';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { isNetworkOnline } from '@/lib/connectivity';
+import { PersistentCache } from '@/lib/persistentCache';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useGlobalContext } from '../globalProvider';
 import { fetchQueryConfig } from "@/lib/queryConfig";
@@ -27,14 +29,20 @@ type OrderCategory = {
   orders: OrderItem[];
 };
 
-// Global cache for orders data to persist across status/page switches
-const globalOrdersCache = new Map<string, {
+// Orders grouped by status/filter/page. Persisted so the rows a user was
+// looking at survive a reload — offline that is the difference between their
+// last view and an error banner. The library scopes the stored bucket by
+// business id, so switching business never surfaces another one's orders.
+type CachedOrdersPage = {
   items: any,
   timestamp: number,
   totalPages: number,
   totalItems: number,
   currentPage: number
-}>();
+};
+const globalOrdersCache = new PersistentCache<CachedOrdersPage>('orders', {
+  maxEntries: 40,
+});
 const CACHE_EXPIRY_TIME = 10 * 60 * 1000; // 10 minutes
 
 
@@ -71,10 +79,14 @@ const useOrder = (
 
     // Check cache first - but skip cache for pagination to ensure fresh data
     const cached = globalOrdersCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < CACHE_EXPIRY_TIME) {
-      // Only use cache if it's for the exact same page request
-      // This prevents stale data when navigating between pages
-      if (cached.currentPage === page) {
+    if (cached) {
+      const isFresh = Date.now() - cached.timestamp < CACHE_EXPIRY_TIME;
+      // Only use a cache entry for the exact same page request (so pagination
+      // stays honest). Offline an expired entry is still the best answer: the
+      // rows this sub-tab showed earlier beat a request that cannot succeed —
+      // networkMode 'offlineFirst' runs this function once even with no
+      // connection, which is where this branch matters.
+      if ((isFresh || !isNetworkOnline()) && cached.currentPage === page) {
         return cached.items;
       }
     }

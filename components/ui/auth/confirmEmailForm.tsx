@@ -40,6 +40,7 @@ const ConfirmEmailForm = () => {
     email: userData?.email,
     password: userData?.password,
     isActive: true,
+    referralCode: String(userData?.referralCode ?? ""),
   };
 
   const submitFormData = async (e: { preventDefault: () => void }) => {

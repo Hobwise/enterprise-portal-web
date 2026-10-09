@@ -25,6 +25,8 @@ import { Plus } from "lucide-react";
 import useOrderDetails from "@/hooks/cachedEndpoints/useOrderDetails";
 import useMenu from "@/hooks/cachedEndpoints/useMenu";
 import useOrderConfiguration from "@/hooks/cachedEndpoints/useOrderConfiguration";
+import { getQueuedItem } from "@/lib/offlineQueue";
+import { toQueuedOrderView } from "@/lib/queuedOrder";
 
 type Item = {
   id: string;
@@ -42,6 +44,8 @@ type Item = {
   count: number;
   packingCost: number;
   isPacked?: boolean;
+  comment?: string;
+  originalCount?: number;
 };
 
 interface OrderData {
@@ -66,6 +70,10 @@ interface OrderData {
     quantity: number;
     unitPrice: number;
   }[];
+  /** True when this is an offline-queued order with no server record. */
+  isQueued?: boolean;
+  /** Queue entry id used to hydrate/edit the local order. */
+  queueId?: string;
 }
 
 interface UpdateOrderModalProps {
@@ -138,7 +146,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
     isSuccessful,
     error,
   } = useOrderDetails(orderFromProp?.id, {
-    enabled: !!orderFromProp?.id && isOpen,
+    enabled: !!orderFromProp?.id && isOpen && !orderFromProp?.isQueued,
   });
 
   // Use menu hook to get current menu items with up-to-date packing costs
@@ -332,6 +340,52 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
     orderConfiguration,
   ]);
 
+  // A queued order lives only on the device, so there is nothing to fetch. Its
+  // editable cart is rebuilt from the queue entry's local snapshot instead of
+  // `useOrderDetails`.
+  useEffect(() => {
+    if (!isOpen || !orderData?.isQueued || !orderData.queueId) return;
+
+    const queued = getQueuedItem(orderData.queueId);
+    const view = queued ? toQueuedOrderView(queued) : null;
+
+    if (!view) {
+      toast.error("Queued order not found");
+      setIsDataProcessingComplete(true);
+      return;
+    }
+
+    const mappedItems: Item[] = view.lines.map((line) => ({
+      id: line.itemID,
+      itemID: line.itemID,
+      itemName: line.itemName,
+      menuName: line.menuName || "",
+      itemDescription: "",
+      price: line.unitPrice,
+      currency: view.currency || "NGN",
+      isAvailable: true,
+      hasVariety: false,
+      image: "",
+      isVariety: false,
+      varieties: null,
+      count: line.quantity,
+      packingCost: line.packingCost,
+      isPacked: line.isPacked,
+      comment: line.comment,
+      originalCount: line.quantity,
+    }));
+
+    setSelectedItems(mappedItems);
+    setAdditionalCost(view.additionalCost || 0);
+    setAdditionalCostName(view.additionalCostName || "");
+
+    const configVatRate = orderConfiguration?.vatRate ?? 0;
+    setVatRate(configVatRate > 0 ? configVatRate / 100 : 0);
+    setIsVatApplied(orderConfiguration?.isVatEnabled ?? view.isVatApplied ?? true);
+    setIsDataProcessingComplete(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, orderData?.isQueued, orderData?.queueId, orderConfiguration]);
+
   // Increment handler
   const handleIncrement = useCallback(
     (id: string) => {
@@ -420,8 +474,12 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
     if (orderData) {
       saveJsonItemToLocalStorage("order", orderData);
 
-      // Navigate to appropriate page based on user type
-      const query = `?mode=add-items&orderId=${orderData.id}`;
+      // A queued order has no server id, so the target page hydrates from the
+      // queue entry instead. Carrying the queue id keeps it editable there.
+      const query =
+        orderData.isQueued && orderData.queueId
+          ? `?mode=add-items&queueId=${orderData.queueId}`
+          : `?mode=add-items&orderId=${orderData.id}`;
       if (isPOSUser) {
         router.push(`/pos${query}`);
       } else {
@@ -542,7 +600,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
           <ModalBody className="p-6">
             {/* Cart Items */}
             {isLoadingOrderDetails ||
-            isLoadingMenu ||
+            (!orderData?.isQueued && isLoadingMenu) ||
             !isDataProcessingComplete ? (
               <div className="flex flex-col h-[40vh] justify-center items-center">
                 <SpinnerLoader size="md" />
@@ -550,7 +608,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                 <p className="text-sm text-textGrey">
                   {isLoadingOrderDetails
                     ? "Loading order details..."
-                    : isLoadingMenu
+                    : isLoadingMenu && !orderData?.isQueued
                     ? "Loading menu data..."
                     : "Processing order data..."}
                 </p>
