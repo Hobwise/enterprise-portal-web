@@ -220,6 +220,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
                 )}
               </Card>
             </div>
+            {/* Campaigns module temporarily disabled — uncomment to re-enable.
             <Card shadow="sm" className=" flex-grow  rounded-xl">
               <div className="flex justify-between items-center border-b border-primaryGrey p-3">
                 <span className="font-[600]">Campaigns</span>
@@ -272,6 +273,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
                 </div>
               )}
             </Card>
+            */}
           </div>
           <Card shadow="sm" className="flex-grow  rounded-xl">
             <div className="flex justify-between items-center border-b border-primaryGrey p-3">

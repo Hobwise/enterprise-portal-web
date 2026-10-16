@@ -7,6 +7,7 @@ import { DEFAULT_PREP_TIME } from '@/app/pos/constants';
 
 interface OrderItem {
   id: string;
+  itemID?: string;
   itemName: string;
   count: number;
   isPacked?: boolean;
@@ -36,17 +37,21 @@ ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({
 
   if (!isOpen || !item) return null;
 
-  // Get quantity of item/variety in cart
-  // For base items, we need to check using uniqueKey || id to match cart logic
-  const getItemQuantity = (itemId: string, useUniqueKey?: boolean): number => {
-    const searchId = useUniqueKey && item ? (item.uniqueKey || item.id) : itemId;
-    const cartItem = orderItems.find((orderItem) => orderItem.id === searchId);
-    return cartItem?.count || 0;
-  };
+  // Get quantity of item/variety in cart. Cart lines are matched on the
+  // underlying itemID so the count is consistent regardless of which
+  // section/menu composite key the item was added under.
+  const getItemQuantity = (itemId: string): number =>
+    orderItems.reduce(
+      (total, orderItem) =>
+        orderItem.itemID === itemId || orderItem.id === itemId
+          ? total + orderItem.count
+          : total,
+      0
+    );
 
   // Calculate total items added from this menu item (base + all varieties)
   const getTotalItemCount = (): number => {
-    let total = getItemQuantity(item.id, true); // Base item count - use uniqueKey
+    let total = getItemQuantity(item.id); // Base item count
 
     // Add all variety counts
     if (item.varieties && item.varieties.length > 0) {
@@ -151,7 +156,7 @@ ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({
                   Main Item
                 </h4>
                 <div className={`p-3 border-2 rounded-lg transition-all ${
-                  getItemQuantity(item.id, true) > 0
+                  getItemQuantity(item.id) > 0
                     ? 'bg-purple-50 border-purple-400'
                     : 'bg-gray-50 border-gray-300'
                 }`}>
@@ -169,7 +174,7 @@ ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({
                           Out of Stock
                         </span>
                       </div>
-                    ) : getItemQuantity(item.id, true) === 0 ? (
+                    ) : getItemQuantity(item.id) === 0 ? (
                       // Show "Add Item" button when quantity is 0
                       <button
                         onClick={() => onAddToCart(item, undefined, false)}
@@ -181,13 +186,13 @@ ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({
                       // Show increment/decrement buttons when quantity > 0
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => onRemoveFromCart(item.uniqueKey || item.id)}
+                          onClick={() => onRemoveFromCart(item.id)}
                           className="w-8 h-8 rounded-lg border text-gray-600 flex items-center justify-center transition-all shadow-sm"
                         >
                           <Minus className="w-4 h-4" />
                         </button>
                         <span className="min-w-[28px] text-center font-bold text-gray-900 text-base">
-                          {getItemQuantity(item.id, true)}
+                          {getItemQuantity(item.id)}
                         </span>
                         <button
                           onClick={() => onAddToCart(item, undefined, false)}
@@ -324,7 +329,7 @@ ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({
               >
                 Item Unavailable
               </button>
-            ) : getItemQuantity(item.id, true) === 0 ? (
+            ) : getItemQuantity(item.id) === 0 ? (
               // Show "Add Item" button when quantity is 0
               <button
                 onClick={handleAddToCart}
@@ -336,13 +341,13 @@ ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({
               // Show increment/decrement buttons when quantity > 0
               <div className="flex items-center justify-center gap-3">
                 <button
-                  onClick={() => onRemoveFromCart(item.uniqueKey || item.id)}
+                  onClick={() => onRemoveFromCart(item.id)}
                   className="w-10 h-10 rounded-lg border  text-gray-600  flex items-center justify-center transition-all shadow-sm"
                 >
                   <Minus className="w-5 h-5" />
                 </button>
                 <span className="min-w-[40px] text-center font-bold text-gray-900 text-xl">
-                  {getItemQuantity(item.id, true)}
+                  {getItemQuantity(item.id)}
                 </span>
                 <button
                   onClick={handleAddToCart}

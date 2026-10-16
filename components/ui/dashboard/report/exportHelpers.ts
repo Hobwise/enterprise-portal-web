@@ -102,7 +102,9 @@ export const useStockAnalysisExport = ({
   startDate,
   endDate,
 }: UseStockAnalysisExportArgs) => {
-  const [isExporting, setIsExporting] = useState(false);
+  const [exportingType, setExportingType] = useState<ExportTypeValue | null>(
+    null
+  );
 
   const exportTable = useCallback(
     async (exportType: number) => {
@@ -121,7 +123,7 @@ export const useStockAnalysisExport = ({
       const fileName =
         SUB_TAB_FILE_NAME[subTab] ?? MODULE_OVERVIEW_FILE_NAME[module] ?? 'Report';
 
-      setIsExporting(true);
+      setExportingType(exportType as ExportTypeValue);
       try {
         let response;
         if (module === 'sales') {
@@ -203,11 +205,11 @@ export const useStockAnalysisExport = ({
           type: 'error',
         });
       } finally {
-        setIsExporting(false);
+        setExportingType(null);
       }
     },
     [module, subTab, filterType, startDate, endDate]
   );
 
-  return { exportTable, isExporting };
+  return { exportTable, exportingType };
 };

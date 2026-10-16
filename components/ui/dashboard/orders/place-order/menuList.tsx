@@ -116,6 +116,116 @@ const retryWithBackoff = async (
   }
 };
 
+const PAGE_SIZE = 11;
+
+// A cached page is usable while fresh — or at any age while offline, where
+// items loaded earlier beat a request that cannot succeed.
+const isCacheUsable = (cached: CachedOrderItems | undefined): boolean => {
+  if (!cached) return false;
+  if (!isNetworkOnline()) return true;
+  return Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME;
+};
+
+// In-flight section/page loads, keyed `${sectionId}_page_${page}`.
+//
+// Preloading and a user's tab click can ask for the same page at the same
+// moment. Without this, that is two identical network requests; with it, the
+// click simply awaits the preload that is already on the wire.
+const inFlightSectionRequests = new Map<string, Promise<CachedOrderItems | null>>();
+
+const buildCachedOrderItems = (response: any, page: number): CachedOrderItems | null => {
+  const items = response?.data?.data?.items;
+  if (!response?.data?.isSuccessful || !Array.isArray(items)) return null;
+
+  const transformedItems = items.map((item: any) => ({
+    ...item,
+    id: item.id || item.itemID,
+    itemID: item.id || item.itemID,
+    isAvailable: item.isAvailable !== false,
+    count: 0,
+    packingCost: item.packingCost,
+  }));
+
+  const pagination = response.data.data?.pagination;
+  return {
+    items: transformedItems,
+    timestamp: Date.now(),
+    totalPages: pagination?.totalPages || Math.ceil((response.data.data?.totalCount || items.length) / PAGE_SIZE),
+    totalItems: pagination?.totalItems || response.data.data?.totalCount || items.length,
+    currentPage: page,
+  };
+};
+
+/**
+ * Loads one section page, reusing the cache and any in-flight request.
+ *
+ * This is the single network entry point for section items so preloading, the
+ * background page fill and a user's tab click can never race into duplicate
+ * requests for the same page.
+ *
+ * @returns the cached/fetched page, or `null` when it could not be loaded.
+ */
+const loadSectionPage = (
+  sectionId: string,
+  page: number,
+  options?: { maxRetries?: number; baseDelay?: number }
+): Promise<CachedOrderItems | null> => {
+  const cacheKey = `${sectionId}_page_${page}`;
+
+  const cached = globalOrderItemsCache.get(cacheKey);
+  if (cached && isCacheUsable(cached) && validateCacheData(cached)) {
+    return Promise.resolve(cached);
+  }
+
+  const existing = inFlightSectionRequests.get(cacheKey);
+  if (existing) return existing;
+
+  const task = (async () => {
+    if (!isNetworkOnline()) return null;
+    try {
+      const response = await retryWithBackoff(
+        () => getMenuItems(sectionId, page, PAGE_SIZE),
+        options?.maxRetries ?? 2,
+        options?.baseDelay ?? 800
+      );
+      const built = buildCachedOrderItems(response, page);
+      if (built) globalOrderItemsCache.set(cacheKey, built);
+      return built;
+    } catch (error) {
+      console.error('Error loading menu items for section', sectionId, ':', error);
+      return null;
+    } finally {
+      inFlightSectionRequests.delete(cacheKey);
+    }
+  })();
+
+  inFlightSectionRequests.set(cacheKey, task);
+  return task;
+};
+
+// Runs async tasks with a bounded number in flight, preserving order of results.
+const runWithConcurrency = async <T,>(
+  tasks: Array<() => Promise<T>>,
+  limit: number
+): Promise<T[]> => {
+  const results: T[] = new Array(tasks.length);
+  let next = 0;
+
+  const workers = Array.from({ length: Math.max(1, Math.min(limit, tasks.length)) }, async () => {
+    while (next < tasks.length) {
+      const index = next++;
+      try {
+        results[index] = await tasks[index]();
+      } catch {
+        // loadSectionPage already swallows errors; guard anyway.
+      }
+    }
+  });
+
+  await Promise.all(workers);
+  return results;
+};
+
 const MenuList = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -143,22 +253,26 @@ const MenuList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [, setTotalItems] = useState(0);
-  const pageSize = 11; // Match menu page pageSize
+  const pageSize = PAGE_SIZE;
   const [hasInitialized, setHasInitialized] = useState(false);
   const [hasInitialLoadCompleted, setHasInitialLoadCompleted] = useState(false);
-  const [isLoadingSection, setIsLoadingSection] = useState(false);
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
   
   const [filterValue, setFilterValue] = React.useState("");
 
   const isOnline = useNetworkOnline();
 
-  // A cached page is usable while fresh — or at any age while offline, where
-  // items loaded earlier beat a request that cannot succeed.
-  const isCacheUsable = (cached: CachedOrderItems | undefined): boolean => {
-    if (!cached) return false;
-    if (!isNetworkOnline()) return true;
-    return Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME;
+  // The section currently on screen. Kept in a ref so a background load that
+  // finishes after the user has switched tabs cannot overwrite the new tab's
+  // items with the old section's.
+  const activeSubCategoryRef = React.useRef<string>('');
+  // Monotonic token: only the newest user-initiated load may apply items, so a
+  // slow earlier request can never clobber a faster later one.
+  const latestLoadRef = React.useRef(0);
+
+  const setActiveSubCategorySafe = (sectionId: string) => {
+    activeSubCategoryRef.current = sectionId;
+    setActiveSubCategory(sectionId);
   };
 
   // Transform categories data
@@ -190,62 +304,56 @@ const MenuList = () => {
   // Initialize categories and sections
   useEffect(() => {
     if (categories && categories.length > 0 && !hasInitialized) {
-      // Clear any previous error state on initialization
-      
       const firstCategory = categories[0];
       setActiveCategory(firstCategory.categoryId);
-      
+
       // Set menu sections for first category
-      const allMenuSections = firstCategory.menus.flatMap((menu: any) => 
+      const allMenuSections = firstCategory.menus.flatMap((menu: any) =>
         menu.menuSections || []
       );
       setMenuSections(allMenuSections);
-      
+
+      // Every section across every category — preloading these (rather than
+      // just the first category's) is what makes switching category/section
+      // warm instead of a cold network round trip.
+      const everySection = categories.flatMap((category: any) =>
+        (category.menus || []).flatMap((menu: any) => menu.menuSections || [])
+      );
+
       // Set first section as active and handle loading
       if (allMenuSections.length > 0) {
         const firstSection = allMenuSections[0];
-        setActiveSubCategory(firstSection.id);
-        
+        setActiveSubCategorySafe(firstSection.id);
+
         // Check if this is the very first load
         if (!hasInitialLoadCompleted && firstSection.totalCount > 0) {
-          // Prevent concurrent loading
-          if (isLoadingSection) return;
-          setIsLoadingSection(true);
-          
           // Check cache first for immediate display
           const cacheKey = `${firstSection.id}_page_1`;
           const cached = globalOrderItemsCache.get(cacheKey);
-          
+          const loadId = ++latestLoadRef.current;
+
           if (cached && isCacheUsable(cached) && validateCacheData(cached)) {
-            // Use cache if available and valid
-            setMenuItems(cached.items);
-            setTotalPages(cached.totalPages);
-            setTotalItems(cached.totalItems);
-            setCurrentPage(cached.currentPage);
-            setCurrentMenuItems(cached.items);
+            applySectionData(cached);
             setHasInitialLoadCompleted(true);
-            setIsLoadingSection(false);
-            // Cached data loaded successfully
+            preloadSections(everySection, firstSection.id);
           } else {
             // Priority load: fetch first item immediately, then rest in background
+            setLoadingItems(true);
             fetchFirstItemPriority(firstSection.id).then(prioritySuccess => {
+              if (latestLoadRef.current === loadId) setLoadingItems(false);
               if (prioritySuccess) {
                 fetchRemainingItemsBackground(firstSection.id, 1);
-                
-                // Background preload other sections after a delay
-                setTimeout(() => {
-                  preloadOtherSections(allMenuSections, firstSection.id);
-                }, 1000);
               } else {
                 // Fallback to regular loading
                 console.warn('Priority loading failed, falling back to regular loading');
                 fetchMenuItems(firstSection.id, 1);
               }
+              // Warm every section's first page so tabs open instantly.
+              preloadSections(everySection, firstSection.id);
             }).catch(error => {
               console.error('Error in priority loading:', error);
               fetchMenuItems(firstSection.id, 1);
             });
-            setIsLoadingSection(false);
           }
         } else if (firstSection.totalCount === 0) {
           // No items in section
@@ -254,7 +362,7 @@ const MenuList = () => {
           // Not an error when section is empty
         }
       }
-      
+
       setHasInitialized(true);
     }
   }, [categories, hasInitialized, hasInitialLoadCompleted]);
@@ -329,127 +437,65 @@ const MenuList = () => {
   // Function to fetch remaining items in background
   const fetchRemainingItemsBackground = async (sectionId: string, page: number = 1) => {
     if (!sectionId) return;
-    
-    setTimeout(async () => {
-      try {
-        // Offline this can only fail; the priority fetch or cache already
-        // covers what is on screen, so skip the doomed request.
-        if (!isNetworkOnline()) {
-          setLoadingItems(false);
-          return;
-        }
-        const response = await retryWithBackoff(
-          () => getMenuItems(sectionId, page, pageSize),
-          2, // fewer retries for background loading
-          1000 // standard delay
-        );
-        if (response?.data?.isSuccessful) {
-          const items = response.data.data.items || [];
-          const transformedItems = items.map((item: any) => ({
-            ...item,
-            id: item.id || item.itemID,
-            itemID: item.id || item.itemID,
-            isAvailable: item.isAvailable !== false,
-            count: 0,
-            packingCost: item.packingCost,
-          }));
 
-          // Extract pagination metadata
-          const pagination = response.data.data?.pagination;
-          const totalPagesFromAPI = pagination?.totalPages || Math.ceil((response.data.data?.totalCount || items.length) / pageSize);
-          const totalItemsFromAPI = pagination?.totalItems || response.data.data?.totalCount || items.length;
+    // Offline this can only fail; the priority fetch or cache already covers
+    // what is on screen, so skip the doomed request.
+    if (!isNetworkOnline()) {
+      setLoadingItems(false);
+      return;
+    }
 
-          const paginationData = {
-            items: transformedItems,
-            timestamp: Date.now(),
-            totalPages: totalPagesFromAPI,
-            totalItems: totalItemsFromAPI,
-            currentPage: page
-          };
+    const data = await loadSectionPage(sectionId, page, { maxRetries: 2, baseDelay: 1000 });
+    setLoadingItems(false);
 
-          // Cache the results
-          const cacheKey = `${sectionId}_page_${page}`;
-          globalOrderItemsCache.set(cacheKey, paginationData);
-          
-          // Update all items
-          setMenuItems(transformedItems);
-          setTotalPages(paginationData.totalPages);
-          setTotalItems(paginationData.totalItems);
-          setCurrentPage(page);
-          
-          // Update global context
-          setCurrentMenuItems(transformedItems);
-          setLoadingItems(false);
-          // Clear any previous errors
-        } else {
-          console.warn('Background loading: API response not successful');
-          setLoadingItems(false);
-          // Don't set error here as first item might have loaded successfully
-        }
-      } catch (error) {
-        console.error('Error fetching remaining items:', error);
-        setLoadingItems(false);
-        // Only show toast if we don't have any items loaded
-        if (!menuItems || menuItems.length === 0) {
-          toast.error('Failed to load menu items');
-        }
-      }
-    }, 100); // Small delay to ensure first item displays immediately
+    if (!data) return;
+
+    // The user may have switched tabs while this was in flight. Painting now
+    // would replace the active tab's items with this old section's; skip it —
+    // the result is already cached for when they come back.
+    if (activeSubCategoryRef.current !== sectionId) return;
+
+    applySectionData(data);
+    setHasInitialLoadCompleted(true);
   };
 
-  // Preload other sections in background
-  const preloadOtherSections = async (sections: any[], currentSectionId: string) => {
-    if (!sections || sections.length <= 1) return;
+  // Preload the given sections' first pages with bounded concurrency, so a tab
+  // click is served from cache instead of starting a request. Previously this
+  // was serialised with a 500ms stagger, which left later tabs cold for seconds.
+  // `loadSectionPage` skips fresh cache entries and de-dupes in-flight requests,
+  // so calling it here cannot duplicate work already in progress.
+  const preloadSections = React.useCallback(
+    (sections: any[], prioritySectionId?: string) => {
+      if (!isNetworkOnline() || !sections?.length) return;
 
-    // Preloading is speculative: offline every request would fail and only
-    // compete with the actions the user is actually taking.
-    if (!isNetworkOnline()) return;
-    
-    // Filter out current section and empty sections
-    const sectionsToPreload = sections.filter(s => s.id !== currentSectionId && s.totalCount > 0);
-    
-    // Stagger the preloading to avoid overwhelming the server
-    sectionsToPreload.forEach((section, index) => {
-      setTimeout(async () => {
-        const cacheKey = `${section.id}_page_1`;
-        const cached = globalOrderItemsCache.get(cacheKey);
-        
-        // Only preload if not already cached
-        if (!cached || (Date.now() - cached.timestamp >= GLOBAL_CACHE_EXPIRY_TIME)) {
-          try {
-            const response = await getMenuItems(section.id, 1, pageSize);
-            if (response?.data?.isSuccessful) {
-              const items = response.data.data.items || [];
-              const transformedItems = items.map((item: any) => ({
-                ...item,
-                id: item.id || item.itemID,
-                itemID: item.id || item.itemID,
-                isAvailable: item.isAvailable !== false,
-                count: 0,
-                packingCost: item.packingCost,
-              }));
+      const seen = new Set<string>();
+      const ordered = sections
+        .filter((s) => s?.id && (s.totalCount ?? 0) > 0)
+        .filter((s) => {
+          if (seen.has(s.id)) return false;
+          seen.add(s.id);
+          return true;
+        })
+        .sort((a, b) => {
+          // Put the section the user is looking at (or about to) first.
+          if (a.id === prioritySectionId) return -1;
+          if (b.id === prioritySectionId) return 1;
+          return 0;
+        });
 
-              const pagination = response.data.data?.pagination;
-              const totalPagesFromAPI = pagination?.totalPages || Math.ceil((response.data.data?.totalCount || items.length) / pageSize);
-              const totalItemsFromAPI = pagination?.totalItems || response.data.data?.totalCount || items.length;
+      if (ordered.length === 0) return;
 
-              globalOrderItemsCache.set(cacheKey, {
-                items: transformedItems,
-                timestamp: Date.now(),
-                totalPages: totalPagesFromAPI,
-                totalItems: totalItemsFromAPI,
-                currentPage: 1
-              });
-            }
-          } catch (error) {
-            console.error(`Error preloading section ${section.id}:`, error);
-          }
-        }
-      }, (index + 1) * 500); // Stagger by 500ms
-    });
-  };
+      void runWithConcurrency(
+        ordered.map((section) => () =>
+          loadSectionPage(section.id, 1, { maxRetries: 1, baseDelay: 800 })
+        ),
+        4 // bounded so we don't flood the server on first paint
+      );
+    },
+    []
+  );
 
-  // Preloading is skipped while offline (see preloadOtherSections). When the
+  // Preloading is skipped while offline (see preloadSections). When the
   // connection returns, warm whatever is still missing so sections that never
   // got prefetched catch up instead of staying empty.
   const wasOffline = React.useRef(false);
@@ -466,10 +512,19 @@ const MenuList = () => {
         section.totalCount > 0 && !globalOrderItemsCache.has(`${section.id}_page_1`)
     );
     if (missingSections.length > 0) {
-      preloadOtherSections(missingSections, activeSubCategory);
+      preloadSections(missingSections, activeSubCategory);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOnline, hasInitialized, menuSections, activeSubCategory]);
+
+  // Applies a loaded page to the visible list (and the global context).
+  const applySectionData = React.useCallback((data: CachedOrderItems) => {
+    setMenuItems(data.items);
+    setTotalPages(data.totalPages);
+    setTotalItems(data.totalItems);
+    setCurrentPage(data.currentPage);
+    setCurrentMenuItems(data.items);
+  }, [setCurrentMenuItems]);
 
   // Fetch menu items for a section with comprehensive error handling
   const fetchMenuItems = async (sectionId: string, page: number = 1) => {
@@ -479,23 +534,12 @@ const MenuList = () => {
     }
 
     const cacheKey = `${sectionId}_page_${page}`;
-    
+
     // Check cache first with validation
     const cached = globalOrderItemsCache.get(cacheKey);
     if (cached && isCacheUsable(cached) && validateCacheData(cached)) {
-      try {
-        setMenuItems(cached.items);
-        setTotalPages(cached.totalPages);
-        setTotalItems(cached.totalItems);
-        setCurrentPage(cached.currentPage);
-        setCurrentMenuItems(cached.items);
-        // Clear any previous errors
-        return;
-      } catch (cacheError) {
-        console.error('Error setting cached data:', cacheError);
-        // Remove corrupted cache entry
-        globalOrderItemsCache.delete(cacheKey);
-      }
+      applySectionData(cached);
+      return;
     } else if (cached && !validateCacheData(cached)) {
       console.warn('Invalid cache data detected, removing:', cacheKey);
       globalOrderItemsCache.delete(cacheKey); // Remove invalid cache
@@ -504,13 +548,8 @@ const MenuList = () => {
     // Offline, don't fire a request that can only fail. Serve whatever was
     // loaded earlier, or say plainly that there is nothing to show.
     if (!isNetworkOnline()) {
-      const fallback = globalOrderItemsCache.get(cacheKey);
-      if (fallback && validateCacheData(fallback)) {
-        setMenuItems(fallback.items);
-        setTotalPages(fallback.totalPages);
-        setTotalItems(fallback.totalItems);
-        setCurrentPage(fallback.currentPage);
-        setCurrentMenuItems(fallback.items);
+      if (cached && validateCacheData(cached)) {
+        applySectionData(cached);
       } else {
         toast.error("You're offline — menu items couldn't be loaded");
         setMenuItems([]);
@@ -518,104 +557,29 @@ const MenuList = () => {
       return;
     }
 
+    // Claim this load. Any earlier in-flight load becomes stale and must not
+    // paint when it resolves.
+    const requestId = ++latestLoadRef.current;
     setLoadingItems(true);
-    
-    // Add timeout to prevent hanging requests  
-    const timeoutId = setTimeout(() => {
-      console.error('Request timeout for section:', sectionId);
-      toast.error('Request timeout - Failed to load menu items');
-      setLoadingItems(false);
-    }, 15000); // 15 second timeout
-    
-    try {
-      // Use retry logic with exponential backoff
-      const response = await retryWithBackoff(
-        () => getMenuItems(sectionId, page, pageSize),
-        3, // max retries
-        1000 // base delay in ms
-      );
-      clearTimeout(timeoutId);
 
-      if (response?.data?.isSuccessful) {
-        const items = response.data.data?.items || [];
-        
-        // Validate items data
-        if (!Array.isArray(items)) {
-          throw new Error('Invalid items data structure');
-        }
-        
-        const transformedItems = items.map((item: any) => {
-          // Validate required item properties
-          if (!item || typeof item !== 'object') {
-            console.warn('Invalid item data:', item);
-            return null;
-          }
-          
-          return {
-            ...item,
-            id: item.id || item.itemID || `temp_${Date.now()}`,
-            itemID: item.id || item.itemID || `temp_${Date.now()}`,
-            itemName: item.itemName || 'Unknown Item',
-            isAvailable: item.isAvailable !== false,
-            count: 0,
-            packingCost: item.packingCost,
-          };
-        }).filter(Boolean); // Remove any null items
+    const data = await loadSectionPage(sectionId, page, { maxRetries: 2, baseDelay: 1000 });
 
-        // Extract pagination metadata
-        const pagination = response.data.data?.pagination;
-        const totalPagesFromAPI = pagination?.totalPages || Math.ceil((response.data.data?.totalCount || items.length) / pageSize);
-        const totalItemsFromAPI = pagination?.totalItems || response.data.data?.totalCount || items.length;
+    // A newer load was requested while this one was in flight — drop the result.
+    if (latestLoadRef.current !== requestId) return;
 
-        const paginationData = {
-          items: transformedItems,
-          timestamp: Date.now(),
-          totalPages: totalPagesFromAPI,
-          totalItems: totalItemsFromAPI,
-          currentPage: page
-        };
-
-        // Cache the results
-        globalOrderItemsCache.set(cacheKey, paginationData);
-        
-        setMenuItems(transformedItems);
-        setTotalPages(paginationData.totalPages);
-        setTotalItems(paginationData.totalItems);
-        setCurrentPage(page);
-        
-        // Update global context
-        setCurrentMenuItems(transformedItems);
-      } else {
-        // Offline the controller resolves undefined; that is expected, not an
-        // application error, and the dev overlay would surface it loudly.
-        if (isNetworkOnline()) {
-          console.error('API returned unsuccessful response:', response?.data);
-        }
-        throw new Error(response?.data?.message || 'API request failed');
-      }
-    } catch (error) {
-      clearTimeout(timeoutId);
-      console.error('Error fetching menu items for section', sectionId, ':', error);
-      
-      // Don't set error if we have cached items to fall back to
+    if (data) {
+      applySectionData(data);
+    } else {
+      // Don't error if we have cached items to fall back to
       const fallbackCache = globalOrderItemsCache.get(cacheKey);
       if (fallbackCache && validateCacheData(fallbackCache)) {
-        console.log('Using stale cache as fallback');
-        setMenuItems(fallbackCache.items);
-        setTotalPages(fallbackCache.totalPages);
-        setTotalItems(fallbackCache.totalItems);
-        setCurrentMenuItems(fallbackCache.items);
+        applySectionData(fallbackCache);
       } else {
-        if (fallbackCache && !validateCacheData(fallbackCache)) {
-          console.warn('Invalid fallback cache detected, removing:', cacheKey);
-          globalOrderItemsCache.delete(cacheKey);
-        }
         toast.error('Failed to load menu items');
         setMenuItems([]);
       }
-    } finally {
-      setLoadingItems(false);
     }
+    setLoadingItems(false);
   };
 
   const getOrderDetails = async () => {
@@ -665,70 +629,55 @@ const MenuList = () => {
 
   // Category and section handlers
   const handleCategorySelect = async (categoryId: string) => {
-    // Immediately clear error state when switching categories
-    
     // Clear any existing debounce timer
     if (debounceTimer) {
       clearTimeout(debounceTimer);
     }
-    
-    // Set debounce timer to prevent rapid switches
+
+    const selectedCategory = categories.find(cat => cat.categoryId === categoryId);
+    if (!selectedCategory) {
+      toast.error('Failed to load category data');
+      return;
+    }
+
+    const allMenuSections = selectedCategory.menus.flatMap((menu: any) =>
+      menu.menuSections || []
+    );
+
+    // Reflect the selection immediately so the tab highlight is responsive and
+    // any in-flight background load for the previous section is seen as stale.
+    // The (network) load itself stays debounced to coalesce rapid switching.
+    setActiveCategory(categoryId);
+    setCurrentPage(1);
+    setMenuSections(allMenuSections);
+    setCurrentCategory(selectedCategory.categoryName);
+
+    const firstSection = allMenuSections[0];
+    setActiveSubCategorySafe(firstSection ? firstSection.id : '');
+
     const newTimer = setTimeout(async () => {
-      setActiveCategory(categoryId);
-      setCurrentPage(1);
-      
-      // Find selected category and set its menu sections
-      const selectedCategory = categories.find(cat => cat.categoryId === categoryId);
-      
-      if (selectedCategory) {
-        const allMenuSections = selectedCategory.menus.flatMap((menu: any) => 
-          menu.menuSections || []
-        );
-        setMenuSections(allMenuSections);
-        
-        // Auto-select first section
-        if (allMenuSections.length > 0) {
-          setActiveSubCategory(allMenuSections[0].id);
-          
-          // Check cache first like menu page
-          const cacheKey = `${allMenuSections[0].id}_page_1`;
-          const cached = globalOrderItemsCache.get(cacheKey);
-          if (cached && isCacheUsable(cached) && validateCacheData(cached)) {
-            setMenuItems(cached.items);
-            setTotalPages(cached.totalPages);
-            setTotalItems(cached.totalItems);
-            setCurrentPage(1);
-          } else if (cached && !validateCacheData(cached)) {
-            console.warn('Invalid cache data detected in category select, removing:', cacheKey);
-            globalOrderItemsCache.delete(cacheKey);
-          } else {
-            // Show loading state but keep previous items visible
-            setLoadingItems(true);
-            try {
-              await fetchMenuItems(allMenuSections[0].id, 1);
-            } catch (error) {
-              console.error('Error in category select:', error);
-              toast.error('Failed to load menu items');
-            }
-          }
-        } else {
-          setMenuItems([]);
-          setActiveSubCategory('');
-          setTotalPages(1);
-          setTotalItems(0);
-          // Clear any previous errors // Not an error, just empty
-        }
-        
-        // Update global context
-        setCurrentCategory(selectedCategory.categoryName);
-      } else {
-        toast.error('Failed to load category data');
+      if (!firstSection) {
+        setMenuItems([]);
+        setTotalPages(1);
+        setTotalItems(0);
+        setDebounceTimer(null);
+        return;
       }
-      
+
+      if (firstSection.totalCount > 0) {
+        // Warm the remaining sections in this category so their tabs open instantly.
+        preloadSections(allMenuSections, firstSection.id);
+        await fetchMenuItems(firstSection.id, 1);
+      } else {
+        setMenuItems([]);
+        setTotalPages(1);
+        setTotalItems(0);
+      }
+
       // Clear the timer reference
       setDebounceTimer(null);
     }, 300); // 300ms debounce delay
-    
+
     setDebounceTimer(newTimer);
   };
 
@@ -737,51 +686,28 @@ const MenuList = () => {
     if (debounceTimer) {
       clearTimeout(debounceTimer);
     }
-    
-    // Set debounce timer to prevent rapid section switches
+
+    setActiveSubCategorySafe(sectionId);
+    setCurrentPage(1); // Always reset to page 1 when switching sections
+
+    const selectedSection = menuSections.find(section => section.id === sectionId);
+    if (selectedSection) {
+      setCurrentSection(selectedSection.name);
+    }
+
     const newTimer = setTimeout(async () => {
-      setActiveSubCategory(sectionId);
-      setCurrentPage(1); // Always reset to page 1 when switching sections
-      // Clear any previous errors // Clear any previous errors
-      
-      // Check cache first for page 1
-      const cacheKey = `${sectionId}_page_1`;
-      const cached = globalOrderItemsCache.get(cacheKey);
-      if (cached && isCacheUsable(cached) && validateCacheData(cached)) {
-        setMenuItems(cached.items);
-        setTotalPages(cached.totalPages);
-        setTotalItems(cached.totalItems);
-      } else if (cached && !validateCacheData(cached)) {
-        console.warn('Invalid cache data detected in section select, removing:', cacheKey);
-        globalOrderItemsCache.delete(cacheKey);
+      if (selectedSection && selectedSection.totalCount > 0) {
+        await fetchMenuItems(sectionId, 1);
       } else {
-        // Show loading state but keep previous items visible
-        const section = menuSections.find(s => s.id === sectionId);
-        if (section && section.totalCount > 0) {
-          setLoadingItems(true);
-          try {
-            await fetchMenuItems(sectionId, 1);
-          } catch (error) {
-            console.error('Error in section select:', error);
-            toast.error('Failed to load menu section');
-          }
-        } else {
-          setMenuItems([]);
-          setTotalPages(1);
-          setTotalItems(0);
-        }
+        setMenuItems([]);
+        setTotalPages(1);
+        setTotalItems(0);
       }
-      
-      // Update global context
-      const selectedSection = menuSections.find(section => section.id === sectionId);
-      if (selectedSection) {
-        setCurrentSection(selectedSection.name);
-      }
-      
+
       // Clear the timer reference
       setDebounceTimer(null);
     }, 200); // 200ms debounce delay (slightly faster than category)
-    
+
     setDebounceTimer(newTimer);
   };
 

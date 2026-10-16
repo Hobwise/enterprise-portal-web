@@ -6,10 +6,11 @@ import {
   ModalContent,
   ModalBody,
   ModalHeader,
+  ModalFooter,
   Divider,
 } from '@nextui-org/react';
 import { formatPrice } from '@/lib/utils';
-import { X } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 // Types
 interface OrderDetailItem {
@@ -43,12 +44,16 @@ interface OrderDetailModalProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   orderData: OrderDetailData | null;
+  onComplete?: () => void;
+  isCompleting?: boolean;
 }
 
 const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   isOpen,
   onOpenChange,
   orderData,
+  onComplete,
+  isCompleting = false,
 }) => {
   if (!orderData) return null;
 
@@ -158,6 +163,22 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 </div>
               </div>
             </ModalBody>
+
+            {onComplete && (
+              <ModalFooter className="px-6 pb-6 pt-0">
+                <button
+                  type="button"
+                  onClick={onComplete}
+                  disabled={isCompleting}
+                  className={`w-full flex items-center justify-center gap-2 rounded-lg bg-primaryColor py-3 font-semibold text-white transition-colors hover:bg-secondaryColor ${
+                    isCompleting ? 'opacity-60 cursor-not-allowed' : ''
+                  }`}
+                >
+                  <Check className="w-5 h-5" />
+                  {isCompleting ? 'Completing...' : 'Complete Order'}
+                </button>
+              </ModalFooter>
+            )}
           </>
         )}
       </ModalContent>

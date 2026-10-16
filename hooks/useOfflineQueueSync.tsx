@@ -27,6 +27,7 @@ import {
   getQueueItems,
   recoverStaleInFlight,
   retryFailed,
+  subscribeToQueue,
   updateQueuedItem,
   type QueuedSubmission,
   type QueuedSubmissionLocal,
@@ -219,6 +220,11 @@ export const useOfflineQueueSync = () => {
       if (event.key === 'pendingSubmissions' || event.key === null) refresh();
     };
 
+    // Same-tab mutations (an order just queued by *this* tab) do not fire
+    // `storage`, so subscribe to the queue's own change signal as well. This is
+    // what makes a freshly queued order appear in the count without a reload.
+    const unsubscribe = subscribeToQueue(refresh);
+
     window.addEventListener('online', goOnline);
     window.addEventListener('offline', goOffline);
     window.addEventListener('focus', drain);
@@ -233,6 +239,7 @@ export const useOfflineQueueSync = () => {
     }, BACKSTOP_INTERVAL_MS);
 
     return () => {
+      unsubscribe();
       window.removeEventListener('online', goOnline);
       window.removeEventListener('offline', goOffline);
       window.removeEventListener('focus', drain);

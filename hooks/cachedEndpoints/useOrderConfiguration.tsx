@@ -8,7 +8,10 @@ const useOrderConfiguration = (overrideBusinessId?: string) => {
 
   return useQuery({
     queryKey: ["orderConfiguration", businessId],
-    queryFn: () => getBusinessOrderConfiguration(businessId),
+    // getBusinessOrderConfiguration resolves to undefined when the request
+    // fails (its catch swallows the error). React Query rejects undefined as
+    // query data, so fall back to null and let consumers apply their defaults.
+    queryFn: async () => (await getBusinessOrderConfiguration(businessId)) ?? null,
     enabled: !!businessId,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

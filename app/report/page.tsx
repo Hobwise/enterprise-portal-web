@@ -91,7 +91,10 @@ import useStockAnalysisInventoryReport from '@/hooks/cachedEndpoints/useStockAna
 import useStockAnalysisUserReport from '@/hooks/cachedEndpoints/useStockAnalysisUserReport';
 import useStockAnalysisQrReport from '@/hooks/cachedEndpoints/useStockAnalysisQrReport';
 import useStockAnalysisBookingReport from '@/hooks/cachedEndpoints/useStockAnalysisBookingReport';
-import { useStockAnalysisExport } from '@/components/ui/dashboard/report/exportHelpers';
+import {
+  ExportTypeValue,
+  useStockAnalysisExport,
+} from '@/components/ui/dashboard/report/exportHelpers';
 
 interface ModuleTab {
   id: ModuleId;
@@ -688,7 +691,7 @@ const StockAnalysisPage: React.FC = () => {
       { enabled: bookingReportEnabled }
     );
 
-  const { exportTable, isExporting } = useStockAnalysisExport({
+  const { exportTable, exportingType } = useStockAnalysisExport({
     module: activeModule,
     subTab: activeSubTab,
     filterType,
@@ -857,7 +860,7 @@ const StockAnalysisPage: React.FC = () => {
           bookingReportLoading={bookingReportLoading}
           comparisonLabel={filterTypeToComparisonLabel(filterType)}
           onExport={exportTable}
-          isExporting={isExporting}
+          exportingType={exportingType}
         />
       </PanelErrorBoundary>
     </div>
@@ -1096,7 +1099,7 @@ interface ActivePanelProps {
   bookingReportLoading?: boolean;
   comparisonLabel?: string;
   onExport: (exportType: number) => void | Promise<void>;
-  isExporting?: boolean;
+  exportingType?: ExportTypeValue | null;
 }
 
 const ActivePanel: React.FC<ActivePanelProps> = ({
@@ -1120,7 +1123,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
   bookingReport,
   bookingReportLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   if (moduleId === 'sales') {
     if (subTabId === 'overview') {
@@ -1136,7 +1139,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
       data: orderReport,
       isLoading: orderReportLoading,
       onExport,
-      isExporting,
+      exportingType,
     };
     switch (subTabId) {
       case 'order-volumes':
@@ -1159,7 +1162,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
             }
             isLoading={orderReportLoading}
             onExport={onExport}
-            isExporting={isExporting}
+            exportingType={exportingType}
           />
         );
     }
@@ -1170,7 +1173,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
       data: paymentReport,
       isLoading: paymentReportLoading,
       onExport,
-      isExporting,
+      exportingType,
     };
     switch (subTabId) {
       case 'payment-summary':
@@ -1191,7 +1194,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
             }
             isLoading={paymentReportLoading}
             onExport={onExport}
-            isExporting={isExporting}
+            exportingType={exportingType}
           />
         );
     }
@@ -1202,7 +1205,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
       data: qrReport,
       isLoading: qrReportLoading,
       onExport,
-      isExporting,
+      exportingType,
     };
     switch (subTabId) {
       case 'overview':
@@ -1223,7 +1226,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
             data={qrReport as unknown as Record<string, unknown> | undefined}
             isLoading={qrReportLoading}
             onExport={onExport}
-            isExporting={isExporting}
+            exportingType={exportingType}
           />
         );
     }
@@ -1234,7 +1237,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
       data: bookingReport,
       isLoading: bookingReportLoading,
       onExport,
-      isExporting,
+      exportingType,
     };
     switch (subTabId) {
       case 'booking-summary':
@@ -1253,7 +1256,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
             }
             isLoading={bookingReportLoading}
             onExport={onExport}
-            isExporting={isExporting}
+            exportingType={exportingType}
           />
         );
     }
@@ -1264,7 +1267,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
       data: inventoryReport,
       isLoading: inventoryReportLoading,
       onExport,
-      isExporting,
+      exportingType,
     };
     switch (subTabId) {
       case 'stock-level':
@@ -1279,7 +1282,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
             data={inventoryReport}
             isLoading={inventoryReportLoading}
             onExport={onExport}
-            isExporting={isExporting}
+            exportingType={exportingType}
           />
         );
     }
@@ -1290,7 +1293,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
       data: userReport,
       isLoading: userReportLoading,
       onExport,
-      isExporting,
+      exportingType,
     };
     switch (subTabId) {
       case 'activity-audit':
@@ -1307,7 +1310,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
             }
             isLoading={userReportLoading}
             onExport={onExport}
-            isExporting={isExporting}
+            exportingType={exportingType}
           />
         );
     }

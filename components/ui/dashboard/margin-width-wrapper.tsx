@@ -12,8 +12,8 @@ export default function MarginWidthWrapper({
   const marginClass = shouldHideSidebar
     ? ''
     : isCollapsed
-      ? 'md:ml-[72px]'
-      : 'md:ml-[272px]';
+      ? 'lg:ml-[72px]'
+      : 'lg:ml-[272px]';
 
   return (
     <div

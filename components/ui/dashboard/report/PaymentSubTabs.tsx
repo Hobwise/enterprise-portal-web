@@ -2,8 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import moment from 'moment';
-import { Button, Skeleton } from '@nextui-org/react';
-import { FiDownload } from 'react-icons/fi';
+import { Skeleton } from '@nextui-org/react';
 import { formatPrice } from '@/lib/utils';
 import {
   reportTableClass,
@@ -12,7 +11,8 @@ import {
   useTableSort,
 } from './SharedPanels';
 import { TablePagination } from './SalesPanels';
-import { ExportType } from './exportHelpers';
+import { ExportType, ExportTypeValue } from './exportHelpers';
+import ExportButtons from './ExportButtons';
 import {
   NetRevenueItem,
   OutstandingReceivableItem,
@@ -49,40 +49,9 @@ interface PaymentSubTabPanelProps {
   data?: PaymentReportResponse;
   isLoading?: boolean;
   onExport?: (exportType: number) => void | Promise<void>;
-  isExporting?: boolean;
+  exportingType?: ExportTypeValue | null;
 }
 
-interface ExportButtonsProps {
-  onExportExcel?: () => void;
-  onExportPdf?: () => void;
-  isLoading?: boolean;
-}
-
-const ExportButtons: React.FC<ExportButtonsProps> = ({
-  onExportExcel,
-  onExportPdf,
-  isLoading,
-}) => (
-  <div className="flex flex-wrap items-center gap-2">
-    <Button
-      variant="bordered"
-      onPress={onExportExcel}
-      isLoading={isLoading}
-      startContent={isLoading ? null : <FiDownload size={14} />}
-      className="border border-gray-200 text-gray-700 bg-white rounded-lg text-xs h-9"
-    >
-      Export Excel
-    </Button>
-    <Button
-      onPress={onExportPdf}
-      isLoading={isLoading}
-      startContent={isLoading ? null : <FiDownload size={14} />}
-      className="bg-primaryColor text-white rounded-lg text-xs h-9"
-    >
-      Export PDF
-    </Button>
-  </div>
-);
 
 const buildExportHandlers = (
   onExport?: (exportType: number) => void | Promise<void>
@@ -121,7 +90,7 @@ export const PaymentSummarySubPanel: React.FC<PaymentSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [statusTab, setStatusTab] = useState<string>('all');
   const [page, setPage] = useState(1);
@@ -265,7 +234,7 @@ export const PaymentSummarySubPanel: React.FC<PaymentSubTabPanelProps> = ({
               ))}
             </select>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
           <table className={reportTableClass(10)}>
@@ -419,7 +388,7 @@ export const PaymentMethodsSubPanel: React.FC<PaymentSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const exportHandlers = buildExportHandlers(onExport);
   const [page, setPage] = useState(1);
@@ -525,7 +494,7 @@ export const PaymentMethodsSubPanel: React.FC<PaymentSubTabPanelProps> = ({
           <h3 className="text-base font-semibold text-gray-900">
             All Payment Method Summaries
           </h3>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
           <table className={reportTableClass(6)}>
@@ -631,7 +600,7 @@ export const QrRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const exportHandlers = buildExportHandlers(onExport);
   const [page, setPage] = useState(1);
@@ -748,7 +717,7 @@ export const QrRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
           <h3 className="text-base font-semibold text-gray-900">
             Revenue by Quick Response
           </h3>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
           <table className={reportTableClass(8)}>
@@ -876,7 +845,7 @@ export const NetRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const exportHandlers = buildExportHandlers(onExport);
   const [page, setPage] = useState(1);
@@ -1020,7 +989,7 @@ export const NetRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
               <option value="zero">Zero ({totals.zeroCount})</option>
             </select>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
           <table className={reportTableClass(4)}>
@@ -1106,7 +1075,7 @@ export const NetRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
 
 export const OutstandingReceivablesSubPanel: React.FC<
   PaymentSubTabPanelProps
-> = ({ data, isLoading, onExport, isExporting }) => {
+> = ({ data, isLoading, onExport, exportingType }) => {
   const [page, setPage] = useState(1);
   const [agingFilter, setAgingFilter] = useState<string>('all');
   const today = moment();
@@ -1269,7 +1238,7 @@ export const OutstandingReceivablesSubPanel: React.FC<
               <option value="aged">Over 30 days ({agingCounts.aged})</option>
             </select>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
           <table className={reportTableClass(8)}>

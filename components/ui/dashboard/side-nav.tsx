@@ -313,7 +313,7 @@ const SideNav = ({ isCollapsed = false, onToggleCollapsed }: SideNavProps) => {
 
   return (
     <div
-      className={`${isCollapsed ? "md:w-[72px]" : "md:w-[272px]"} ${SIDEBAR_BG} h-screen flex-1 fixed z-30 hidden md:flex flex-col border-r ${SIDEBAR_BORDER} transition-[width] duration-200 ease-in-out`}
+      className={`${isCollapsed ? "lg:w-[72px]" : "lg:w-[272px]"} ${SIDEBAR_BG} h-screen flex-1 fixed z-30 hidden lg:flex flex-col border-r ${SIDEBAR_BORDER} transition-[width] duration-200 ease-in-out`}
     >
       {/* Collapse / expand toggle — floats on right edge */}
       {onToggleCollapsed ? (
@@ -322,7 +322,7 @@ const SideNav = ({ isCollapsed = false, onToggleCollapsed }: SideNavProps) => {
           onClick={onToggleCollapsed}
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="hidden md:flex absolute -right-3 top-16 z-40 w-6 h-6 items-center justify-center rounded-full bg-[#1A2236] border border-[#2B3550] text-[#94A3B8] hover:text-white hover:bg-[#2B3550] shadow-md transition-colors"
+          className="hidden lg:flex absolute -right-3 top-16 z-40 w-6 h-6 items-center justify-center rounded-full bg-[#1A2236] border border-[#2B3550] text-[#94A3B8] hover:text-white hover:bg-[#2B3550] shadow-md transition-colors"
         >
           {isCollapsed ? (
             <FiChevronRight className="text-[12px]" />

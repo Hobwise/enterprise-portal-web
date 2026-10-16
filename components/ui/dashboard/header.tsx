@@ -235,7 +235,7 @@ const Header = ({ ispos }: any) => {
               type="button"
               onClick={toggleMobileNav}
               aria-label="Open navigation menu"
-              className="mr-2 flex h-10 w-10 shrink-0 items-center justify-center md:hidden"
+              className="mr-2 flex h-10 w-10 shrink-0 items-center justify-center lg:hidden"
             >
               <svg
                 width="22"
@@ -271,7 +271,7 @@ const Header = ({ ispos }: any) => {
           )}
           {!ispos && (
             <>
-              <div className="hidden md:flex items-center space-x-4">
+              <div className="hidden lg:flex items-center space-x-4">
                 <div className="flex items-center gap-2">
                   {navItem ? (
                     <>
@@ -294,7 +294,7 @@ const Header = ({ ispos }: any) => {
                   )}
                 </div>
               </div>
-              <div className="flex flex-1 items-center md:hidden">
+              <div className="flex flex-1 items-center lg:hidden">
                 <BusinessLogo
                   textColor="text-black font-lexend text-base font-[600]"
                   containerClass="flex items-center gap-2"
