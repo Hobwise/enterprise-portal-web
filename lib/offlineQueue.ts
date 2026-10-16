@@ -137,6 +137,41 @@ const MAX_ITEMS = 50;
 
 const isBrowser = (): boolean => typeof window !== 'undefined';
 
+/**
+ * Same-tab change notification.
+ *
+ * The queue is the single source of truth for the offline order count, but the
+ * `storage` event only fires in *other* tabs — the tab that wrote the entry
+ * never hears about it. Without this, a page that stays mounted (the global
+ * sync pill, or the orders list right after an order is queued) renders a
+ * stale count until something else forces a re-read.
+ *
+ * Every mutation funnels through `writeQueue`, so that is the one place that
+ * needs to broadcast. Listeners are called synchronously after the write
+ * commits.
+ */
+type QueueListener = () => void;
+const queueListeners = new Set<QueueListener>();
+
+/** Subscribe to same-tab queue mutations. Returns an unsubscribe function. */
+export const subscribeToQueue = (listener: QueueListener): (() => void) => {
+  if (!isBrowser()) return () => {};
+  queueListeners.add(listener);
+  return () => {
+    queueListeners.delete(listener);
+  };
+};
+
+const notifyQueueChange = (): void => {
+  queueListeners.forEach((listener) => {
+    try {
+      listener();
+    } catch {
+      // A listener must never break a write; queueing is best-effort.
+    }
+  });
+};
+
 const newId = (): string => {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
     return crypto.randomUUID();
@@ -203,8 +238,10 @@ const writeQueue = (items: QueuedSubmission[]): void => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(pending.slice(-10)));
     } catch {
       /* give up silently; queueing is best-effort */
+      return;
     }
   }
+  notifyQueueChange();
 };
 
 export const enqueue = (
@@ -569,4 +606,5 @@ export const approveAllQueuedItems = (): number =>
 export const clearQueue = (): void => {
   if (!isBrowser()) return;
   localStorage.removeItem(STORAGE_KEY);
+  notifyQueueChange();
 };

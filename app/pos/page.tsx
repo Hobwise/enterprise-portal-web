@@ -99,18 +99,26 @@ const POSContent = () => {
     );
   });
 
+  // A cart line is tied to the underlying menu item (itemID), not to the
+  // section/menu composite key. Matching on itemID means the selection badge
+  // shows the same count everywhere the item is rendered — including the
+  // "All Menu" tab and any other category the item appears in. The uniqueKey
+  // comparison is kept as a fallback for rows that have no itemID.
+  const matchesCartItem = (orderItem: (typeof orderItems)[number], item: MenuItem) =>
+    orderItem.itemID === item.id ||
+    orderItem.id === (item.uniqueKey || item.id);
+
   // Helper function to check if item is in cart
-  const isItemInCart = (item: MenuItem): boolean => {
-    const itemKey = item.uniqueKey || item.id;
-    return orderItems.some((orderItem) => orderItem.id === itemKey);
-  };
+  const isItemInCart = (item: MenuItem): boolean =>
+    orderItems.some((orderItem) => matchesCartItem(orderItem, item));
 
   // Helper function to get item count from cart
-  const getItemCount = (item: MenuItem): number => {
-    const itemKey = item.uniqueKey || item.id;
-    const cartItem = orderItems.find((orderItem) => orderItem.id === itemKey);
-    return cartItem ? cartItem.count : 0;
-  };
+  const getItemCount = (item: MenuItem): number =>
+    orderItems.reduce(
+      (total, orderItem) =>
+        matchesCartItem(orderItem, item) ? total + orderItem.count : total,
+      0
+    );
 
   // Handle search input change
   const handleSearch = (query: string) => {
@@ -198,10 +206,14 @@ const POSContent = () => {
     }
   };
 
-  // Handle removing variety items from cart
+  // Handle removing items from cart (base item or variety, identified by their
+  // underlying item id). The cart rows themselves are keyed by the
+  // section/menu composite uniqueKey, so resolve to the concrete row id first.
   const handleRemoveVarietyFromCart = (itemId: string) => {
-    // Find the item in cart and decrement or remove
-    handleDecrement(itemId);
+    const target = orderItems.find(
+      (orderItem) => orderItem.itemID === itemId || orderItem.id === itemId
+    );
+    if (target) handleDecrement(target.id);
   };
 
   // Wrapper to clear cart, forget the loaded order and reset URL params.

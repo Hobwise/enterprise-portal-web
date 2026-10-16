@@ -19,11 +19,17 @@ import { setJsonCookie } from "@/lib/cookies";
 import { getUserSubscription } from "@/app/api/controllers/dashboard/settings";
 import { forceTokenRefresh } from "@/app/api/apiService";
 import useLogout from "@/hooks/cachedEndpoints/useLogout";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import {
+  clearSignupReferralCode,
+  getSignupReferralCode,
+} from "@/lib/referral";
 
 const BusinessInformationForm = () => {
   const router = useRouter();
   const { refetch } = useSubscription();
   const { logoutFn } = useLogout();
+  const { userData } = useGlobalContext();
   const userInformation = getJsonItemFromLocalStorage("userInformation");
 
   const [loading, setLoading] = useState(false);
@@ -151,14 +157,25 @@ const BusinessInformationForm = () => {
     });
 
     try {
+      // Carry the referral code captured at signup into the business creation
+      // request so the referral is applied to the new business. Prefer the code
+      // persisted during signup, then fall back to any code returned on the user
+      // from email confirmation.
+      const referralCode =
+        getSignupReferralCode() ||
+        String(userData?.referralCode ?? "") ||
+        String(userInformation?.referralCode ?? "");
+
       const data = await createBusiness({
         ...businessFormData,
         businessCategory: +businessFormData.businessCategory,
+        ...(referralCode ? { referralCode } : {}),
       });
 
       setResponse(data);
 
       if (data?.data?.isSuccessful) {
+        clearSignupReferralCode();
         // Show progress update
         notify({
           title: "Business Created",

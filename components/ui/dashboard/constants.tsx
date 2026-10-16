@@ -46,11 +46,12 @@ const QUICK_RESPONSE_ITEM: SideNavItem = {
   icon: <QRcodeSidebar />,
 };
 
-const CAMPAIGNS_ITEM: SideNavItem = {
-  title: "Campaigns",
-  path: "/dashboard/campaigns",
-  icon: <CampaignSidebar />,
-};
+// Campaigns module temporarily disabled — remove the comments below to re-enable.
+// const CAMPAIGNS_ITEM: SideNavItem = {
+//   title: "Campaigns",
+//   path: "/dashboard/campaigns",
+//   icon: <CampaignSidebar />,
+// };
 
 const RESERVATION_ITEM: SideNavItem = {
   title: "Reservation",
@@ -82,7 +83,7 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
   MENU_ITEM,
   ORDERS_ITEM,
   QUICK_RESPONSE_ITEM,
-  CAMPAIGNS_ITEM,
+  // CAMPAIGNS_ITEM, // Campaigns temporarily disabled
   RESERVATION_ITEM,
   BOOKINGS_ITEM,
   PAYMENTS_ITEM,
@@ -94,7 +95,7 @@ const OVERVIEW_ITEMS: SideNavItem[] = [DASHBOARD_ITEM];
 const SALES_ITEMS: SideNavItem[] = [MENU_ITEM, ORDERS_ITEM, PAYMENTS_ITEM];
 const ENGAGEMENT_ITEMS: SideNavItem[] = [
   QUICK_RESPONSE_ITEM,
-  CAMPAIGNS_ITEM,
+  // CAMPAIGNS_ITEM, // Campaigns temporarily disabled
   RESERVATION_ITEM,
   BOOKINGS_ITEM,
 ];

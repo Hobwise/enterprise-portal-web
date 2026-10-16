@@ -2,8 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import moment from 'moment';
-import { Button, Skeleton } from '@nextui-org/react';
-import { FiDownload } from 'react-icons/fi';
+import { Skeleton } from '@nextui-org/react';
 import { formatPrice } from '@/lib/utils';
 import {
   BarList,
@@ -13,7 +12,8 @@ import {
   useTableSort,
 } from './SharedPanels';
 import { TablePagination } from './SalesPanels';
-import { ExportType } from './exportHelpers';
+import { ExportType, ExportTypeValue } from './exportHelpers';
+import ExportButtons from './ExportButtons';
 import {
   BarRow,
   OrderReportItem,
@@ -43,7 +43,7 @@ interface QrPanelProps {
   data?: QrReportResponse;
   isLoading?: boolean;
   onExport?: (exportType: number) => void | Promise<void>;
-  isExporting?: boolean;
+  exportingType?: ExportTypeValue | null;
 }
 
 const Skeletonized: React.FC = () => (
@@ -57,37 +57,6 @@ const Skeletonized: React.FC = () => (
   </div>
 );
 
-interface ExportButtonsProps {
-  onExportExcel?: () => void;
-  onExportPdf?: () => void;
-  isLoading?: boolean;
-}
-
-const ExportButtons: React.FC<ExportButtonsProps> = ({
-  onExportExcel,
-  onExportPdf,
-  isLoading,
-}) => (
-  <div className="flex flex-wrap items-center gap-2">
-    <Button
-      variant="bordered"
-      onPress={onExportExcel}
-      isLoading={isLoading}
-      startContent={isLoading ? null : <FiDownload size={14} />}
-      className="border border-gray-200 text-gray-700 bg-white rounded-lg text-xs h-9"
-    >
-      Export Excel
-    </Button>
-    <Button
-      onPress={onExportPdf}
-      isLoading={isLoading}
-      startContent={isLoading ? null : <FiDownload size={14} />}
-      className="bg-primaryColor text-white rounded-lg text-xs h-9"
-    >
-      Export PDF
-    </Button>
-  </div>
-);
 
 const buildExportHandlers = (
   onExport?: (exportType: number) => void | Promise<void>
@@ -317,7 +286,7 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -405,7 +374,7 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({
               <option value="inactive">Inactive ({counts.inactive})</option>
             </select>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
           <table className={reportTableClass(7)}>
@@ -533,7 +502,7 @@ export const QrOrderHistoryPanel: React.FC<QrPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [page, setPage] = useState(1);
   const exportHandlers = buildExportHandlers(onExport);
@@ -584,7 +553,7 @@ export const QrOrderHistoryPanel: React.FC<QrPanelProps> = ({
               {rows.length.toLocaleString()} orders
             </span>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
           <table className={reportTableClass(7)}>
@@ -710,7 +679,7 @@ export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [page, setPage] = useState(1);
   const exportHandlers = buildExportHandlers(onExport);
@@ -829,7 +798,7 @@ export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
               {performance.length.toLocaleString()} Quick Responses
             </span>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
           <table className={reportTableClass(6)}>
@@ -936,7 +905,7 @@ export const QrActivityTimelinePanel: React.FC<QrPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [page, setPage] = useState(1);
   const exportHandlers = buildExportHandlers(onExport);
@@ -991,7 +960,7 @@ export const QrActivityTimelinePanel: React.FC<QrPanelProps> = ({
               {rows.length.toLocaleString()} events
             </span>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
           <table className={reportTableClass(4)}>

@@ -1,7 +1,6 @@
 'use client';
 import { getMenuCategories } from '@/app/api/controllers/dashboard/menu';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { isNetworkOnline } from '@/lib/connectivity';
 import { createSingletonCache } from '@/lib/persistentCache';
 import { useQuery } from '@tanstack/react-query';
 
@@ -38,7 +37,7 @@ const useMenuCategories = () => {
   const business = getJsonItemFromLocalStorage('business');
   const userInformation = getJsonItemFromLocalStorage('userInformation');
 
-  const fetchMenuCategories = async () => {
+  const fetchMenuCategories = async (): Promise<Category[]> => {
     try {
       const responseData = await getMenuCategories(
         business[0]?.businessId,
@@ -47,16 +46,19 @@ const useMenuCategories = () => {
       const data = responseData?.data?.data as Category[];
       if (Array.isArray(data)) {
         categoriesCache.set(data);
+        return data;
       }
-      return data;
-    } catch (error) {
-      // Offline, whatever loaded last beats a failed page: serve it instead
-      // of surfacing an error. Online failures still throw so the page can
-      // show its retry/banner state.
+
+      // The controller swallows request failures and resolves `undefined`.
+      // React Query rejects `undefined` as query data, so serve the last good
+      // payload when we have one, otherwise throw so the page can retry.
       const cached = categoriesCache.get();
-      if (!isNetworkOnline() && cached) {
-        return cached;
-      }
+      if (cached) return cached;
+      throw new Error('Failed to load menu categories');
+    } catch (error) {
+      // Offline (or a failed request), whatever loaded last beats an empty page.
+      const cached = categoriesCache.get();
+      if (cached) return cached;
       throw error;
     }
   };
@@ -64,6 +66,10 @@ const useMenuCategories = () => {
   const { data, isLoading, isError, refetch } = useQuery<Category[]>({
     queryKey: ['menuCategories'],
     queryFn: fetchMenuCategories,
+    // Seed from the persisted cache so the category tabs paint immediately on
+    // a reload instead of waiting on the network. Freshness is still governed
+    // by staleTime — the query refetches in the background when stale.
+    initialData: () => categoriesCache.get(),
     refetchOnWindowFocus: false,
     // Run the fetch once even when offline (retries still pause), so the
     // offline fallback above actually gets a chance to answer.

@@ -2,11 +2,11 @@
 
 import React, { useMemo, useState } from 'react';
 import moment from 'moment';
-import { Button, Skeleton } from '@nextui-org/react';
-import { FiDownload } from 'react-icons/fi';
+import { Skeleton } from '@nextui-org/react';
 import { TablePagination } from './SalesPanels';
 import { reportTableClass, SortableTH, useTableSort } from './SharedPanels';
-import { ExportType } from './exportHelpers';
+import { ExportType, ExportTypeValue } from './exportHelpers';
+import ExportButtons from './ExportButtons';
 import {
   UserAuditLogItem,
   UserDailyActivePeriod,
@@ -19,40 +19,9 @@ interface UserSubTabPanelProps {
   data?: UserReportResponse;
   isLoading?: boolean;
   onExport?: (exportType: number) => void | Promise<void>;
-  isExporting?: boolean;
+  exportingType?: ExportTypeValue | null;
 }
 
-interface ExportButtonsProps {
-  onExportExcel?: () => void;
-  onExportPdf?: () => void;
-  isLoading?: boolean;
-}
-
-const ExportButtons: React.FC<ExportButtonsProps> = ({
-  onExportExcel,
-  onExportPdf,
-  isLoading,
-}) => (
-  <div className="flex flex-wrap items-center gap-2">
-    <Button
-      variant="bordered"
-      onPress={onExportExcel}
-      isLoading={isLoading}
-      startContent={isLoading ? null : <FiDownload size={14} />}
-      className="border border-gray-200 text-gray-700 bg-white rounded-lg text-sm h-10 px-4"
-    >
-      Export Excel
-    </Button>
-    <Button
-      onPress={onExportPdf}
-      isLoading={isLoading}
-      startContent={isLoading ? null : <FiDownload size={14} />}
-      className="bg-primaryColor text-white rounded-lg text-sm h-10 px-4"
-    >
-      Export PDF
-    </Button>
-  </div>
-);
 
 const buildExportHandlers = (
   onExport?: (exportType: number) => void | Promise<void>
@@ -100,7 +69,7 @@ export const ActivityAuditPanel: React.FC<UserSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [activityFilter, setActivityFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
@@ -201,7 +170,7 @@ export const ActivityAuditPanel: React.FC<UserSubTabPanelProps> = ({
               </select>
             )}
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} size="md" />
         </div>
         <div className="overflow-x-auto">
           <table className={reportTableClass(8)}>
@@ -363,7 +332,7 @@ export const DailySessionsPanel: React.FC<UserSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [page, setPage] = useState(1);
   const [staffFilter, setStaffFilter] = useState<string>('all');
@@ -441,7 +410,7 @@ export const DailySessionsPanel: React.FC<UserSubTabPanelProps> = ({
               </select>
             )}
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} size="md" />
         </div>
         <div className="overflow-x-auto">
           <table className={reportTableClass(6)}>

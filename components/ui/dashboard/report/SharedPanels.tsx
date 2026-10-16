@@ -3,8 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import moment from 'moment';
 import { useRouter } from 'next/navigation';
-import { Button, Skeleton } from '@nextui-org/react';
-import { FiDownload } from 'react-icons/fi';
+import { Skeleton } from '@nextui-org/react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { TbArrowsSort, TbArrowUp, TbArrowDown } from 'react-icons/tb';
 import { Bar, Doughnut } from 'react-chartjs-2';
@@ -21,7 +20,8 @@ import {
 } from 'chart.js';
 import { formatPrice } from '@/lib/utils';
 import { slugifyReportName } from '@/lib/reportRoutes';
-import { ExportType } from './exportHelpers';
+import { ExportType, ExportTypeValue } from './exportHelpers';
+import ExportButtons from './ExportButtons';
 import { AvailableReport, BarRow, BreakdownRow, StatCard } from './types';
 
 ChartJS.register(
@@ -1026,7 +1026,7 @@ interface GenericReportPanelProps {
   data?: Record<string, unknown> | unknown[] | null;
   isLoading?: boolean;
   onExport?: (exportType: number) => void | Promise<void>;
-  isExporting?: boolean;
+  exportingType?: ExportTypeValue | null;
 }
 
 /**
@@ -1045,7 +1045,7 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [page, setPage] = useState(1);
 
@@ -1203,27 +1203,11 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
             </div>
             {onExport && (
               <div className="flex items-center gap-2 px-1 py-1">
-                <Button
-                  variant="bordered"
-                  onPress={handleExportExcel}
-                  isLoading={isExporting}
-                  startContent={
-                    isExporting ? null : <FiDownload size={14} />
-                  }
-                  className="border border-gray-200 text-gray-700 bg-white rounded-lg text-xs h-9"
-                >
-                  Export Excel
-                </Button>
-                <Button
-                  onPress={handleExportPdf}
-                  isLoading={isExporting}
-                  startContent={
-                    isExporting ? null : <FiDownload size={14} />
-                  }
-                  className="bg-primaryColor text-white rounded-lg text-xs h-9"
-                >
-                  Export PDF
-                </Button>
+                <ExportButtons
+                  onExportExcel={handleExportExcel}
+                  onExportPdf={handleExportPdf}
+                  exportingType={exportingType}
+                />
               </div>
             )}
           </div>

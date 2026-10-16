@@ -2,12 +2,12 @@
 
 import React, { useMemo, useState } from 'react';
 import moment from 'moment';
-import { Button, Skeleton } from '@nextui-org/react';
-import { FiDownload } from 'react-icons/fi';
+import { Skeleton } from '@nextui-org/react';
 import { formatPrice } from '@/lib/utils';
 import { reportTableClass, StatCards } from './SharedPanels';
 import { TablePagination } from './SalesPanels';
-import { ExportType } from './exportHelpers';
+import { ExportType, ExportTypeValue } from './exportHelpers';
+import ExportButtons from './ExportButtons';
 import {
   BookingReportItem,
   BookingReportResponse,
@@ -45,40 +45,9 @@ interface BookingSubTabPanelProps {
   data?: BookingReportResponse;
   isLoading?: boolean;
   onExport?: (exportType: number) => void | Promise<void>;
-  isExporting?: boolean;
+  exportingType?: ExportTypeValue | null;
 }
 
-interface ExportButtonsProps {
-  onExportExcel?: () => void;
-  onExportPdf?: () => void;
-  isLoading?: boolean;
-}
-
-const ExportButtons: React.FC<ExportButtonsProps> = ({
-  onExportExcel,
-  onExportPdf,
-  isLoading,
-}) => (
-  <div className="flex flex-wrap items-center gap-2">
-    <Button
-      variant="bordered"
-      onPress={onExportExcel}
-      isLoading={isLoading}
-      startContent={isLoading ? null : <FiDownload size={14} />}
-      className="border border-gray-200 text-gray-700 bg-white rounded-lg text-xs h-9"
-    >
-      Export Excel
-    </Button>
-    <Button
-      onPress={onExportPdf}
-      isLoading={isLoading}
-      startContent={isLoading ? null : <FiDownload size={14} />}
-      className="bg-primaryColor text-white rounded-lg text-xs h-9"
-    >
-      Export PDF
-    </Button>
-  </div>
-);
 
 const buildExportHandlers = (
   onExport?: (exportType: number) => void | Promise<void>
@@ -126,7 +95,7 @@ export const BookingSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [statusTab, setStatusTab] = useState<string>('all');
   const [page, setPage] = useState(1);
@@ -247,7 +216,7 @@ export const BookingSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
               ))}
             </select>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
           <table className={reportTableClass(9)}>
@@ -337,7 +306,7 @@ export const ReservationSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const exportHandlers = buildExportHandlers(onExport);
   const [page, setPage] = useState(1);
@@ -410,7 +379,7 @@ export const ReservationSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
           <h3 className="text-base font-semibold text-gray-900">
             Reservation Summary
           </h3>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
           <table className={reportTableClass(4)}>
@@ -495,7 +464,7 @@ export const OccupancyUtilizationPanel: React.FC<BookingSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const exportHandlers = buildExportHandlers(onExport);
   const [page, setPage] = useState(1);
@@ -569,7 +538,7 @@ export const OccupancyUtilizationPanel: React.FC<BookingSubTabPanelProps> = ({
           <h3 className="text-base font-semibold text-gray-900">
             Daily Occupancy & Utilization
           </h3>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
           <table className={reportTableClass(7)}>

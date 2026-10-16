@@ -4,6 +4,7 @@ import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import { notify, clearAppStorage } from '@/lib/utils';
+import { saveSignupReferralCode } from '@/lib/referral';
 import { trackSignUpStarted } from '@/lib/posthogAnalytics';
 import { Spacer, Tooltip } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
@@ -77,6 +78,9 @@ const SignupForm = () => {
     e.preventDefault();
     queryClient.clear();
     clearAppStorage();
+    // clearAppStorage wipes localStorage, so persist the referral code after it
+    // runs. It is applied later when the business is created.
+    saveSignupReferralCode(signupFormData.referralCode);
     setUserData(signupFormData);
     setLoading(true);
     const data = await createUser(signupFormData);

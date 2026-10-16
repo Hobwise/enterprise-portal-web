@@ -103,7 +103,47 @@ const Users = ({ data, refetch }: any) => {
     }
   };
 
-  const renderCell = React.useCallback((user, columnKey) => {
+  const renderActions = (user: any) => {
+    if (!user || user?.email === userInformation?.email) return null;
+
+    return (
+      <Dropdown aria-label="drop down" className="">
+        <DropdownTrigger aria-label="actions">
+          <span className="text-lg rounded-md p-1 text-default-400 cursor-pointer hover:bg-grey100 active:opacity-50">
+            <HiOutlineDotsVertical />
+          </span>
+        </DropdownTrigger>
+        <DropdownMenu className="text-black">
+          <DropdownSection>
+            {(role === 0 || userRolePermissions?.canDeleteUser === true) && (
+              <DropdownItem
+                onClick={() => toggleDelete(user)}
+                aria-label="delete user"
+              >
+                <div className={` flex gap-2  items-center`}>
+                  <RiDeleteBin6Line className="text-[20px] text-danger-500" />
+                  <p className=" text-grey500 text-sm">Delete user</p>
+                </div>
+              </DropdownItem>
+            )}
+            {(role === 0 || userRolePermissions?.canEditUser === true) && (
+              <DropdownItem
+                onClick={() => toggleEdit(user)}
+                aria-label="edit user"
+              >
+                <div className={` flex gap-2  items-center`}>
+                  <MdEdit className="text-[20px]" />
+                  <p className=" text-grey500 text-sm">Edit user</p>
+                </div>
+              </DropdownItem>
+            )}
+          </DropdownSection>
+        </DropdownMenu>
+      </Dropdown>
+    );
+  };
+
+  const renderCell = (user, columnKey) => {
     const cellValue = user[columnKey];
 
     switch (columnKey) {
@@ -152,50 +192,55 @@ const Users = ({ data, refetch }: any) => {
 
       case "actions":
         return (
-          <div className="relative flexjustify-center items-center gap-2">
-            {user?.email !== userInformation.email && (
-              <Dropdown aria-label="drop down" className="">
-                <DropdownTrigger aria-label="actions">
-                  <span className="text-lg rounded-md p-1  text-default-400 cursor-pointer hover:bg-grey100 active:opacity-50">
-                    <HiOutlineDotsVertical />
-                  </span>
-                </DropdownTrigger>
-                <DropdownMenu className="text-black">
-                  <DropdownSection>
-                    {(role === 0 ||
-                      userRolePermissions?.canDeleteUser === true) && (
-                      <DropdownItem
-                        onClick={() => toggleDelete(user)}
-                        aria-label="delete user"
-                      >
-                        <div className={` flex gap-2  items-center`}>
-                          <RiDeleteBin6Line className="text-[20px] text-danger-500" />
-                          <p className=" text-grey500 text-sm">Delete user</p>
-                        </div>
-                      </DropdownItem>
-                    )}
-                    {(role === 0 ||
-                      userRolePermissions?.canEditUser === true) && (
-                      <DropdownItem
-                        onClick={() => toggleEdit(user)}
-                        aria-label="edit user"
-                      >
-                        <div className={` flex gap-2  items-center`}>
-                          <MdEdit className="text-[20px]" />
-                          <p className=" text-grey500 text-sm">Edit user</p>
-                        </div>
-                      </DropdownItem>
-                    )}
-                  </DropdownSection>
-                </DropdownMenu>
-              </Dropdown>
-            )}
+          <div className="relative flex justify-center items-center gap-2">
+            {renderActions(user)}
           </div>
         );
       default:
         return cellValue;
     }
-  }, []);
+  };
+
+  const renderMobileCard = (user: any) => (
+    <article key={user?.id} className="border-b border-divider p-4 last:border-b-0">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <Avatar
+            showFallback
+            name={user?.firstName}
+            src={user.image ? `data:image/jpeg;base64,${user?.image}` : noImage}
+          />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold">
+              {user?.firstName} {user?.lastName}
+            </p>
+            <p className="truncate text-xs text-grey400">{user?.email}</p>
+          </div>
+        </div>
+        <div className="shrink-0">{renderActions(user)}</div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <Chip
+          classNames={{
+            base: `text-xs h-6 capitalize font-[700] bg-[#EAE5FF] text-primaryColor`,
+          }}
+          size="sm"
+        >
+          {user?.role === 0 ? "Manager" : "Staff"}
+        </Chip>
+        {user?.primaryAssignment ? (
+          <span className="text-xs text-grey600">
+            {user?.primaryAssignment}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mt-2 text-xs text-gray-500">
+        {moment(user?.dateCreated).format("MMM Do YYYY, h:mm a")}
+      </div>
+    </article>
+  );
 
   const exportCSV = async () => {
     setLoadingExport(true);
@@ -212,16 +257,21 @@ const Users = ({ data, refetch }: any) => {
       toast.error("Export failed, please try again");
     }
   };
+
+  // `displayData` holds accumulated data on mobile / current page on desktop.
+  const usersToDisplay =
+    displayData && displayData.length > 0 ? displayData : data;
+
   return (
     <section>
-      <div className="flex justify-between">
-        <div className="w-[220px]">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="sm:w-[220px]">
           <h1 className="text-[16px] leading-8 font-semibold">Team members</h1>
           <p className="text-sm  text-grey600 md:mb-10 mb-4">
             Invite your colleagues to work faster and collaborate together
           </p>
         </div>
-        <div className=" flex gap-3 pt-5">
+        <div className="flex flex-wrap gap-3 sm:pt-5">
           <Button
             disabled={loadingExport}
             onClick={exportCSV}
@@ -247,53 +297,66 @@ const Users = ({ data, refetch }: any) => {
         </div>
       </div>
 
-      <Table
-        radius="lg"
-        isCompact
-        removeWrapper
-        allowsSorting
-        aria-label="list of team members"
-        bottomContent={bottomContent}
-        bottomContentPlacement="outside"
-        classNames={{
-          wrapper: "max-h-[382px]",
-          th: "text-default-500 text-xs border-b border-divider py-4 rounded-none bg-grey300",
-          td: "py-3 text-textGrey border-b border-divider h-[70px]",
-          tr: "border-b border-divider rounded-none hover:bg-gray-50 transition-colors",
-        }}
-        selectedKeys={selectedKeys}
-        sortDescriptor={sortDescriptor}
-        topContentPlacement="outside"
-        onSelectionChange={setSelectedKeys}
-        onSortChange={setSortDescriptor}
-      >
-        <TableHeader columns={headerColumns}>
-          {(column) => (
-            <TableColumn
-              key={column.uid}
-              align={column.uid === "actions" ? "center" : "start"}
-              allowsSorting={column.sortable}
-            >
-              {column.name}
-            </TableColumn>
+      {isMobile ? (
+        <div className="overflow-hidden rounded-lg border border-divider">
+          {usersToDisplay && usersToDisplay.length > 0 ? (
+            usersToDisplay.map((item: any) => renderMobileCard(item))
+          ) : (
+            <div className="py-10 text-center text-sm text-textGrey">
+              No team members found
+            </div>
           )}
-        </TableHeader>
-        <TableBody
-          emptyContent={"No team members found"}
-          items={displayData || data}
+          {bottomContent}
+        </div>
+      ) : (
+        <Table
+          radius="lg"
+          isCompact
+          removeWrapper
+          allowsSorting
+          aria-label="list of team members"
+          bottomContent={bottomContent}
+          bottomContentPlacement="outside"
+          classNames={{
+            wrapper: "max-h-[382px]",
+            th: "text-default-500 text-xs border-b border-divider py-4 rounded-none bg-grey300",
+            td: "py-3 text-textGrey border-b border-divider h-[70px]",
+            tr: "border-b border-divider rounded-none hover:bg-gray-50 transition-colors",
+          }}
+          selectedKeys={selectedKeys}
+          sortDescriptor={sortDescriptor}
+          topContentPlacement="outside"
+          onSelectionChange={setSelectedKeys}
+          onSortChange={setSortDescriptor}
         >
-          {(item) => (
-            <TableRow
-              key={item?.id}
-              className="cursor-pointer hover:bg-gray-50 transition-colors"
-            >
-              {(columnKey) => (
-                <TableCell>{renderCell(item, columnKey)}</TableCell>
-              )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          <TableHeader columns={headerColumns}>
+            {(column) => (
+              <TableColumn
+                key={column.uid}
+                align={column.uid === "actions" ? "center" : "start"}
+                allowsSorting={column.sortable}
+              >
+                {column.name}
+              </TableColumn>
+            )}
+          </TableHeader>
+          <TableBody
+            emptyContent={"No team members found"}
+            items={usersToDisplay || []}
+          >
+            {(item) => (
+              <TableRow
+                key={item?.id}
+                className="cursor-pointer hover:bg-gray-50 transition-colors"
+              >
+                {(columnKey) => (
+                  <TableCell>{renderCell(item, columnKey)}</TableCell>
+                )}
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      )}
       <CreateUser
         isOpen={isOpen}
         onOpenChange={onOpenChange}

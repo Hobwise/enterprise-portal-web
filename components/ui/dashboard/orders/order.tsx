@@ -85,6 +85,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { isNetworkOnline } from "@/lib/connectivity";
 import useNetworkOnline from "@/hooks/useNetworkOnline";
 import { useOfflineQueueSync } from "@/hooks/useOfflineQueueSync";
+import { getStatusForCategory, withQueuedOrders } from "@/lib/orderCategories";
 import QueuedOrderInvoice from "@/components/offline/QueuedOrderInvoice";
 
 // Type definitions
@@ -167,24 +168,6 @@ const INITIAL_VISIBLE_COLUMNS = [
 // warming effect in OrdersList) — bounded so a large page can't fire a burst of
 // requests the moment it renders.
 const WARMED_ROW_LIMIT = 25;
-
-// Status mapping for categories
-const getStatusForCategory = (categoryName: string): number | null => {
-  switch (categoryName.toLowerCase()) {
-    case "open orders":
-      return 0;
-    case "closed orders":
-      return 1;
-    case "cancelled orders":
-      return 2;
-    case "awaitingconfirmation orders":
-    case "awaiting confirmation orders":
-      return 3;
-    case "all orders":
-    default:
-      return null; // null means show all orders
-  }
-};
 
 const OrdersList: React.FC<OrdersListProps> = ({
   orders,
@@ -434,18 +417,10 @@ const OrdersList: React.FC<OrdersListProps> = ({
   // Tab counts come from the server, which knows nothing about orders still in
   // the device queue. Add them to the tabs they belong to (All Orders and Open
   // Orders) so the badge matches the rows actually on screen.
-  const categoriesWithQueued = React.useMemo(() => {
-    const queuedCount = queuedAsOrderItems.length;
-    if (!categories?.length || queuedCount === 0) return categories;
-
-    return categories.map((category: OrderCategory) => {
-      const status = getStatusForCategory(category.name);
-      if (status === null || status === 0) {
-        return { ...category, count: (category.count || 0) + queuedCount };
-      }
-      return category;
-    });
-  }, [categories, queuedAsOrderItems.length]);
+  const categoriesWithQueued = React.useMemo(
+    () => withQueuedOrders(categories, queuedAsOrderItems) ?? categories,
+    [categories, queuedAsOrderItems]
+  );
 
   const {
     headerColumns,

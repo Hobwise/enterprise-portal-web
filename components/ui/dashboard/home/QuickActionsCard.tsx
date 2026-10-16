@@ -7,7 +7,7 @@ import { HiOutlineQrcode } from "react-icons/hi";
 import { LuSettings } from "react-icons/lu";
 import {
   MdOutlineAddBox,
-  MdOutlineCampaign,
+  // MdOutlineCampaign, // Campaigns temporarily disabled
   MdOutlineEventNote,
   MdOutlinePayments,
   MdOutlineReceiptLong,
@@ -61,12 +61,13 @@ const ACTIONS: Action[] = [
     href: "/dashboard/quick-response",
     icon: <HiOutlineQrcode className="text-[18px]" />,
   },
-  {
-    id: "new-campaign",
-    label: "New Campaign",
-    href: "/dashboard/campaigns/create-campaign",
-    icon: <MdOutlineCampaign className="text-[18px]" />,
-  },
+  // Campaigns module temporarily disabled — uncomment to re-enable.
+  // {
+  //   id: "new-campaign",
+  //   label: "New Campaign",
+  //   href: "/dashboard/campaigns/create-campaign",
+  //   icon: <MdOutlineCampaign className="text-[18px]" />,
+  // },
   {
     id: "settings",
     label: "Settings",
