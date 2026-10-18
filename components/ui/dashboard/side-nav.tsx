@@ -2,26 +2,13 @@
 
 import { useState, useEffect, useMemo, useCallback, memo } from "react";
 
-import { generateRefreshToken } from "@/app/api/controllers/auth";
-import useGetBusiness from "@/hooks/cachedEndpoints/useGetBusiness";
-import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByCooperate";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import useUser from "@/hooks/cachedEndpoints/useUser";
 import { useSubscriptionContext } from "@/hooks/providers/SubscriptionProvider";
-import { decryptPayload } from "@/lib/encrypt-decrypt";
-import {
-  getJsonItemFromLocalStorage,
-  resetLoginInfo,
-  saveJsonItemToLocalStorage,
-  setTokenCookie,
-} from "@/lib/utils";
+import { getJsonItemFromLocalStorage } from "@/lib/utils";
 import { isPOSUser as checkIsPOSUser, isCategoryUser as checkIsCategoryUser } from "@/lib/userTypeUtils";
 import {
   Avatar,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
   Skeleton,
   useDisclosure,
 } from "@nextui-org/react";
@@ -32,18 +19,15 @@ import {
   FiLock,
   FiLogOut,
   FiSearch,
-  FiChevronDown,
   FiChevronLeft,
   FiChevronRight,
 } from "react-icons/fi";
-import { GoPlus } from "react-icons/go";
 import { PiBookOpenTextLight } from "react-icons/pi";
 
 import LogoutModal from "@/components/ui/logoutModal";
-import { getPlanLabel } from "@/lib/planLabels";
 import { routePermissions } from "@/lib/routePermissions";
 import { SIDENAV_ITEMS, SIDENAV_CONFIG } from "./constants";
-import AddBusiness from "./settings/addBusiness";
+import BusinessSwitcher from "./businessSwitcher";
 import { SideNavItem, SideNavSection } from "./types";
 
 const SIDEBAR_BG = "bg-[#0B1320]";
@@ -53,14 +37,6 @@ const ITEM_INACTIVE =
   "text-[#CBD5E1] hover:bg-[#111B2E] hover:text-white";
 const ITEM_ACTIVE =
   "relative bg-gradient-to-r from-[#3D1E8E] via-[#1F1547] to-[#0B1320] text-white shadow-md before:content-[''] before:absolute before:-left-3 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-2/3 before:bg-[#A78BFA] before:rounded-md";
-
-const getBusinessInitials = (name?: string): string => {
-  if (!name) return "B";
-  const words = name.trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return "B";
-  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
-  return (words[0][0] + words[words.length - 1][0]).toUpperCase();
-};
 
 interface SideNavProps {
   isCollapsed?: boolean;
@@ -78,10 +54,7 @@ const SideNav = ({ isCollapsed = false, onToggleCollapsed }: SideNavProps) => {
   const [isCategoryUserState, setIsCategoryUserState] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: businessDetails, isLoading } = useGetBusiness();
-  const { data: businessDetailsList, refetch } = useGetBusinessByCooperate();
   const { data: userData } = useUser();
-  const { subscription } = useSubscriptionContext();
 
   useEffect(() => {
     setIsMounted(true);
@@ -96,97 +69,14 @@ const SideNav = ({ isCollapsed = false, onToggleCollapsed }: SideNavProps) => {
     isLoading: isPermissionsLoading,
   } = usePermission();
 
-  const business = useMemo(
-    () => getJsonItemFromLocalStorage("business") || [],
-    [],
-  );
   const userInformation = useMemo(
     () => getJsonItemFromLocalStorage("userInformation"),
     [],
   );
 
-  const refreshToken = useCallback(async () => {
-    const localUserData = getJsonItemFromLocalStorage("userInformation");
-    const businesses = getJsonItemFromLocalStorage("business");
-
-    if (!localUserData) return null;
-
-    const { refreshToken, email } = localUserData;
-    const businessId = businesses[0].businessId;
-
-    try {
-      const response = await generateRefreshToken({
-        refreshToken,
-        businessId,
-        email,
-      });
-
-      if (response?.data?.response) {
-        const decryptedData = decryptPayload(response?.data?.response);
-
-        const {
-          token: newToken,
-          refreshToken: newRefreshToken,
-          tokenExpiration,
-        } = decryptedData?.data;
-
-        saveJsonItemToLocalStorage("userInformation", {
-          ...localUserData,
-          token: newToken,
-          refreshToken: newRefreshToken,
-          tokenExpiration,
-        });
-        setTokenCookie("token", newToken);
-        return newToken;
-      } else {
-        resetLoginInfo();
-      }
-    } catch (error) {
-      resetLoginInfo();
-      console.log(error);
-    }
-  }, []);
-
-  const toggleBtwBusiness = useCallback(
-    async (businessInfo: any) => {
-      const exists = business?.some(
-        (comparisonItem: any) => comparisonItem.businessId === businessInfo.id,
-      );
-
-      if (exists) return;
-
-      const transformedArray = [
-        {
-          businessId: businessInfo.id,
-          businessAddress: businessInfo.address,
-          state: businessInfo.state,
-          city: businessInfo.city,
-          businessName: businessInfo.name,
-          primaryColor: businessInfo.primaryBrandColour,
-          secondaryColor: businessInfo.secondaryBrandColour,
-          businessContactEmail: businessInfo.contactEmailAddress,
-          businessContactNumber: businessInfo.contactPhoneNumber,
-        },
-      ];
-
-      saveJsonItemToLocalStorage("business", transformedArray);
-      await refreshToken();
-      window.location.reload();
-    },
-    [business, refreshToken],
-  );
-
-  const [isOpenBusinessModal, setIsOpenBusinessModal] = useState(false);
-  const toggleBusinessModal = useCallback(() => {
-    setIsOpenBusinessModal((prev) => !prev);
-  }, []);
-
   const pathname = usePathname();
 
-  const { planCapabilities, hasCapability } = useSubscriptionContext();
-  const canAccessMultipleLocations = hasCapability(
-    "canAccessMultipleLocations",
-  );
+  const { planCapabilities } = useSubscriptionContext();
 
   // True when the user's subscription plan doesn't cover this route.
   const isPlanLockedPath = useCallback(
@@ -299,11 +189,6 @@ const SideNav = ({ isCollapsed = false, onToggleCollapsed }: SideNavProps) => {
     return [];
   }, [isPermissionsLoading, isMounted, isPOSUserState, isCategoryUserState]);
 
-  const planLabel = getPlanLabel(subscription?.plan);
-
-  const businessName = business?.[0]?.businessName || "Your business";
-  const businessInitials = getBusinessInitials(businessName);
-
   const fullName = `${userData?.firstName ?? ""} ${userData?.lastName ?? ""}`.trim();
   const displayName = fullName || userInformation?.email || "User";
   const displayEmail = userData?.email || userInformation?.email || "";
@@ -334,103 +219,7 @@ const SideNav = ({ isCollapsed = false, onToggleCollapsed }: SideNavProps) => {
 
       <div className="flex flex-col w-full h-full">
         {/* Business header */}
-        <div
-          className={`flex-shrink-0 ${isCollapsed ? "px-2" : "px-4"} pt-5`}
-        >
-          <Dropdown
-            placement="bottom-start"
-            classNames={{ content: "bg-[#1A2236] border border-[#2B3550]" }}
-          >
-            <DropdownTrigger>
-              <button
-                type="button"
-                aria-label="Switch business"
-                title={
-                  userInformation?.isOwner && canAccessMultipleLocations
-                    ? `Switch business — ${businessName}`
-                    : businessName
-                }
-                className={`w-full flex items-center rounded-lg py-2 transition hover:bg-[#111B2E] ${
-                  isCollapsed
-                    ? "justify-center px-1"
-                    : "gap-2 px-1.5"
-                }`}
-              >
-                <BusinessAvatar
-                  initials={businessInitials}
-                  imageBase64={businessDetails?.logoImage}
-                  isLoading={isLoading}
-                />
-                {!isCollapsed && (
-                  <>
-                    <div className="flex flex-col items-start flex-1 min-w-0">
-                      <span className="text-[13px] font-semibold text-white truncate w-full text-left leading-tight">
-                        {businessName}
-                      </span>
-                      <PoweredByBadge planLabel={planLabel} />
-                    </div>
-                    {userInformation?.isOwner && canAccessMultipleLocations ? (
-                      <FiChevronDown
-                        aria-hidden="true"
-                        className="text-[#94A3B8] text-[14px] flex-shrink-0"
-                      />
-                    ) : null}
-                  </>
-                )}
-              </button>
-            </DropdownTrigger>
-            <DropdownMenu
-              variant="light"
-              aria-label="Switch business"
-              className="max-h-[300px] overflow-y-auto"
-            >
-              {userInformation?.isOwner &&
-                canAccessMultipleLocations &&
-                (businessDetailsList ?? []).map((item: any) => (
-                  <DropdownItem
-                    classNames={{
-                      base: "hover:bg-[#111B2E] max-h-[100px] overflow-scroll",
-                    }}
-                    key={item?.id}
-                    onClick={() => toggleBtwBusiness(item)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar
-                        showFallback
-                        src={`data:image/jpeg;base64,${item?.logoImage}`}
-                        name={item?.name}
-                        size="sm"
-                      />
-                      <div className="flex flex-col">
-                        <span className="font-medium text-[14px] text-white">
-                          {item?.name}
-                        </span>
-                        <span className="text-xs text-[#94A3B8]">
-                          {item?.city}
-                        </span>
-                      </div>
-                    </div>
-                  </DropdownItem>
-                ))}
-
-              {userInformation?.isOwner && canAccessMultipleLocations && (
-                <DropdownItem
-                  key="add another business"
-                  onClick={toggleBusinessModal}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-md bg-[#5F35D2]">
-                      <GoPlus className="text-[18px] text-white" />
-                    </div>
-                    <span className="font-medium text-[14px] text-white">
-                      Add another business
-                    </span>
-                  </div>
-                </DropdownItem>
-              )}
-            </DropdownMenu>
-          </Dropdown>
-        </div>
+        <BusinessSwitcher isCollapsed={isCollapsed} />
 
         {/* Search */}
         {isCollapsed ? (
@@ -569,66 +358,12 @@ const SideNav = ({ isCollapsed = false, onToggleCollapsed }: SideNavProps) => {
         </div>
       </div>
 
-      <AddBusiness
-        refetch={refetch}
-        toggleBusinessModal={toggleBusinessModal}
-        isOpenBusinessModal={isOpenBusinessModal}
-      />
       <LogoutModal isOpen={isLogoutOpen} onOpenChange={onLogoutOpenChange} />
     </div>
   );
 };
 
 export default SideNav;
-
-// Business avatar — uses logo if available, otherwise gradient + initials
-const BusinessAvatar = memo(
-  ({
-    initials,
-    imageBase64,
-    isLoading,
-  }: {
-    initials: string;
-    imageBase64?: string;
-    isLoading?: boolean;
-  }) => {
-    if (isLoading) {
-      return <Skeleton className="w-10 h-10 rounded-md" />;
-    }
-
-    if (imageBase64) {
-      return (
-        <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0">
-          <img
-            src={`data:image/jpeg;base64,${imageBase64}`}
-            alt="Business logo"
-            className="w-full h-full object-cover"
-          />
-        </div>
-      );
-    }
-
-    return (
-      <div className="w-10 h-10 rounded-md flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-[#7C3AED] to-[#4C1D95]">
-        <span className="text-[12px] font-bold text-white tracking-tight">
-          {initials}
-        </span>
-      </div>
-    );
-  },
-);
-BusinessAvatar.displayName = "BusinessAvatar";
-
-// "Powered by Hobwise · <plan>" badge below business name
-const PoweredByBadge = memo(({ planLabel }: { planLabel: string }) => (
-  <span className="flex items-center gap-1 text-[10px] text-[#94A3B8] mt-0.5 w-full min-w-0 whitespace-nowrap overflow-hidden">
-    <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7] flex-shrink-0" />
-    <span className="truncate">Powered by Hobwise</span>
-    <span aria-hidden="true" className="flex-shrink-0">·</span>
-    <span className="text-[#C4B5FD] font-medium flex-shrink-0">{planLabel}</span>
-  </span>
-));
-PoweredByBadge.displayName = "PoweredByBadge";
 
 // Skeleton placeholder for the nav list
 const NavSkeleton = ({ isCollapsed = false }: { isCollapsed?: boolean }) => (

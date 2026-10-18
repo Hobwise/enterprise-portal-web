@@ -14,6 +14,7 @@ import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { useSubscriptionContext } from '@/hooks/providers/SubscriptionProvider';
 import { routePermissions } from '@/lib/routePermissions';
 import { SIDENAV_ITEMS, SIDENAV_CONFIG } from './constants';
+import BusinessSwitcher from './businessSwitcher';
 import { SideNavItem, SideNavSection } from './types';
 
 type MenuItemWithSubMenuProps = {
@@ -173,6 +174,10 @@ const HeaderMobile = () => {
         variants={variants}
         className='absolute grid w-full gap-3 px-10 py-16 max-h-screen overflow-y-auto'
       >
+        <MenuItem>
+          <BusinessSwitcher variant='mobile' />
+        </MenuItem>
+        <MenuItem className='h-px w-full bg-gray-600' />
         {filteredSections.map((section, sectionIdx) => (
           <MobileSectionGroup
             key={section.sectionTitle}
