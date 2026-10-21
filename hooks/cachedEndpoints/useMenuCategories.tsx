@@ -67,9 +67,11 @@ const useMenuCategories = () => {
     queryKey: ['menuCategories'],
     queryFn: fetchMenuCategories,
     // Seed from the persisted cache so the category tabs paint immediately on
-    // a reload instead of waiting on the network. Freshness is still governed
-    // by staleTime — the query refetches in the background when stale.
+    // a reload instead of waiting on the network. Freshness is governed
+    // by staleTime so cached categories are treated as fresh and do not cause churn.
     initialData: () => categoriesCache.get(),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     // Run the fetch once even when offline (retries still pause), so the
     // offline fallback above actually gets a chance to answer.
