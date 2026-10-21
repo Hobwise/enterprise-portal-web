@@ -75,21 +75,35 @@ const globalOrderItemsCache = new PersistentCache<CachedOrderItems>('order-items
 });
 const GLOBAL_CACHE_EXPIRY_TIME = 10 * 60 * 1000; // 10 minutes
 
+// Helper to check if two item lists are equivalent (to prevent unnecessary re-renders / reloads)
+const areItemsEqual = (a: any[], b: any[]): boolean => {
+  if (a === b) return true;
+  if (!Array.isArray(a) || !Array.isArray(b)) return false;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const itemA = a[i];
+    const itemB = b[i];
+    if (!itemA || !itemB) return false;
+    if (String(itemA.id || itemA.itemID) !== String(itemB.id || itemB.itemID)) return false;
+    if (Number(itemA.price) !== Number(itemB.price)) return false;
+    if (Boolean(itemA.isAvailable) !== Boolean(itemB.isAvailable)) return false;
+    if (String(itemA.itemName || itemA.name || '') !== String(itemB.itemName || itemB.name || '')) return false;
+    if (Number(itemA.packingCost || 0) !== Number(itemB.packingCost || 0)) return false;
+  }
+  return true;
+};
+
 // Cache validation helper
 const validateCacheData = (cached: any): boolean => {
   if (!cached || typeof cached !== 'object') return false;
   if (!Array.isArray(cached.items)) return false;
   if (typeof cached.timestamp !== 'number') return false;
-  if (typeof cached.totalPages !== 'number') return false;
-  if (typeof cached.totalItems !== 'number') return false;
   
-  // Validate each item has required fields
+  // Validate each item has required structure safely without strict type rejections
   return cached.items.every((item: any) => 
     item && 
     typeof item === 'object' && 
-    typeof item.id === 'string' && 
-    typeof item.itemName === 'string' &&
-    typeof item.price === 'number'
+    (item.id != null || item.itemID != null)
   );
 };
 
@@ -134,24 +148,43 @@ const isCacheUsable = (cached: CachedOrderItems | undefined): boolean => {
 const inFlightSectionRequests = new Map<string, Promise<CachedOrderItems | null>>();
 
 const buildCachedOrderItems = (response: any, page: number): CachedOrderItems | null => {
-  const items = response?.data?.data?.items;
-  if (!response?.data?.isSuccessful || !Array.isArray(items)) return null;
+  const rawItems = response?.data?.data?.items ?? 
+    (Array.isArray(response?.data?.data) ? response.data.data : 
+    (Array.isArray(response?.data?.items) ? response.data.items : null));
 
-  const transformedItems = items.map((item: any) => ({
-    ...item,
-    id: item.id || item.itemID,
-    itemID: item.id || item.itemID,
-    isAvailable: item.isAvailable !== false,
-    count: 0,
-    packingCost: item.packingCost,
-  }));
+  if (!response?.data?.isSuccessful || !Array.isArray(rawItems)) return null;
+
+  const transformedItems = rawItems.map((item: any) => {
+    const rawId = item.id || item.itemID || '';
+    const idStr = String(rawId);
+    const parsedPrice = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
+    const parsedPacking = typeof item.packingCost === 'number' ? item.packingCost : parseFloat(item.packingCost) || 0;
+
+    // Safeguard localStorage from massive base64 payloads (> 25KB)
+    let image = item.image || '';
+    if (typeof image === 'string' && image.length > 25000 && !image.startsWith('http')) {
+      image = '';
+    }
+
+    return {
+      ...item,
+      id: idStr,
+      itemID: idStr,
+      itemName: item.itemName || item.name || '',
+      price: parsedPrice,
+      isAvailable: item.isAvailable !== false,
+      count: 0,
+      packingCost: parsedPacking,
+      image,
+    };
+  });
 
   const pagination = response.data.data?.pagination;
   return {
     items: transformedItems,
     timestamp: Date.now(),
-    totalPages: pagination?.totalPages || Math.ceil((response.data.data?.totalCount || items.length) / PAGE_SIZE),
-    totalItems: pagination?.totalItems || response.data.data?.totalCount || items.length,
+    totalPages: pagination?.totalPages || Math.ceil((response.data.data?.totalCount || rawItems.length) / PAGE_SIZE),
+    totalItems: pagination?.totalItems || response.data.data?.totalCount || rawItems.length,
     currentPage: page,
   };
 };
@@ -275,17 +308,28 @@ const MenuList = () => {
     setActiveSubCategory(sectionId);
   };
 
-  // Transform categories data
+  // Transform categories data - preserve reference if categories haven't changed
   useEffect(() => {
-    if (categoriesData) {
-      const transformedCategories = categoriesData.map(category => ({
-        categoryId: category.categoryId,
-        categoryName: category.categoryName,
-        orderIndex: category.orderIndex,
-        preventOrderItemReduction: category.preventOrderItemReduction,
-        menus: category.menus || []
-      }));
-      setCategories(transformedCategories);
+    if (categoriesData && categoriesData.length > 0) {
+      setCategories(prev => {
+        if (
+          prev.length === categoriesData.length &&
+          prev.every(
+            (cat, i) =>
+              cat.categoryId === categoriesData[i]?.categoryId &&
+              cat.categoryName === categoriesData[i]?.categoryName
+          )
+        ) {
+          return prev;
+        }
+        return categoriesData.map(category => ({
+          categoryId: category.categoryId,
+          categoryName: category.categoryName,
+          orderIndex: category.orderIndex,
+          preventOrderItemReduction: category.preventOrderItemReduction,
+          menus: category.menus || []
+        }));
+      });
     }
   }, [categoriesData]);
 
@@ -326,18 +370,35 @@ const MenuList = () => {
         setActiveSubCategorySafe(firstSection.id);
 
         // Check if this is the very first load
-        if (!hasInitialLoadCompleted && firstSection.totalCount > 0) {
+        if (!hasInitialLoadCompleted) {
           // Check cache first for immediate display
           const cacheKey = `${firstSection.id}_page_1`;
           const cached = globalOrderItemsCache.get(cacheKey);
-          const loadId = ++latestLoadRef.current;
 
-          if (cached && isCacheUsable(cached) && validateCacheData(cached)) {
+          if (cached && validateCacheData(cached)) {
             applySectionData(cached);
+            setLoadingItems(false);
             setHasInitialLoadCompleted(true);
             preloadSections(everySection, firstSection.id);
+
+            // Revalidate in background if online and stale
+            if (isNetworkOnline() && !isCacheUsable(cached)) {
+              loadSectionPage(firstSection.id, 1).then(fresh => {
+                if (
+                  fresh &&
+                  !areItemsEqual(cached.items, fresh.items) &&
+                  activeSubCategoryRef.current === firstSection.id
+                ) {
+                  applySectionData(fresh);
+                }
+              });
+            }
+          } else if (firstSection.totalCount === 0 && !isNetworkOnline()) {
+            setMenuItems([]);
+            setHasInitialLoadCompleted(true);
           } else {
             // Priority load: fetch first item immediately, then rest in background
+            const loadId = ++latestLoadRef.current;
             setLoadingItems(true);
             fetchFirstItemPriority(firstSection.id).then(prioritySuccess => {
               if (latestLoadRef.current === loadId) setLoadingItems(false);
@@ -355,11 +416,6 @@ const MenuList = () => {
               fetchMenuItems(firstSection.id, 1);
             });
           }
-        } else if (firstSection.totalCount === 0) {
-          // No items in section
-          setMenuItems([]);
-          setHasInitialLoadCompleted(true);
-          // Not an error when section is empty
         }
       }
 
@@ -405,13 +461,19 @@ const MenuList = () => {
         const items = response.data.data.items || [];
         if (items.length > 0) {
           const firstItem = items[0];
+          const rawId = firstItem.id || firstItem.itemID || '';
+          const idStr = String(rawId);
+          const parsedPrice = typeof firstItem.price === 'number' ? firstItem.price : parseFloat(firstItem.price) || 0;
+          const parsedPacking = typeof firstItem.packingCost === 'number' ? firstItem.packingCost : parseFloat(firstItem.packingCost) || 0;
           const transformedItem = {
             ...firstItem,
-            id: firstItem.id || firstItem.itemID,
-            itemID: firstItem.id || firstItem.itemID,
+            id: idStr,
+            itemID: idStr,
+            itemName: firstItem.itemName || firstItem.name || '',
+            price: parsedPrice,
             isAvailable: firstItem.isAvailable !== false,
             count: 0,
-            packingCost: firstItem.packingCost,
+            packingCost: parsedPacking,
           };
           
           // Set first item immediately
@@ -470,7 +532,7 @@ const MenuList = () => {
 
       const seen = new Set<string>();
       const ordered = sections
-        .filter((s) => s?.id && (s.totalCount ?? 0) > 0)
+        .filter((s) => s?.id && !globalOrderItemsCache.has(`${s.id}_page_1`))
         .filter((s) => {
           if (seen.has(s.id)) return false;
           seen.add(s.id);
@@ -509,7 +571,7 @@ const MenuList = () => {
 
     const missingSections = (menuSections || []).filter(
       (section: any) =>
-        section.totalCount > 0 && !globalOrderItemsCache.has(`${section.id}_page_1`)
+        section?.id && !globalOrderItemsCache.has(`${section.id}_page_1`)
     );
     if (missingSections.length > 0) {
       preloadSections(missingSections, activeSubCategory);
@@ -537,44 +599,57 @@ const MenuList = () => {
 
     // Check cache first with validation
     const cached = globalOrderItemsCache.get(cacheKey);
-    if (cached && isCacheUsable(cached) && validateCacheData(cached)) {
+    const hasValidCache = !!(cached && validateCacheData(cached));
+
+    if (hasValidCache) {
       applySectionData(cached);
-      return;
+      setLoadingItems(false);
+
+      // If offline or fresh cache, no network fetch needed
+      if (!isNetworkOnline() || isCacheUsable(cached)) {
+        return;
+      }
     } else if (cached && !validateCacheData(cached)) {
       console.warn('Invalid cache data detected, removing:', cacheKey);
       globalOrderItemsCache.delete(cacheKey); // Remove invalid cache
     }
 
-    // Offline, don't fire a request that can only fail. Serve whatever was
-    // loaded earlier, or say plainly that there is nothing to show.
+    // Offline, don't fire a request that can only fail.
     if (!isNetworkOnline()) {
-      if (cached && validateCacheData(cached)) {
+      if (hasValidCache) {
         applySectionData(cached);
       } else {
         toast.error("You're offline — menu items couldn't be loaded");
         setMenuItems([]);
       }
+      setLoadingItems(false);
       return;
     }
 
-    // Claim this load. Any earlier in-flight load becomes stale and must not
-    // paint when it resolves.
-    const requestId = ++latestLoadRef.current;
-    setLoadingItems(true);
+    // Only show loading spinner if we don't have valid cached data already on screen
+    if (!hasValidCache) {
+      setLoadingItems(true);
+    }
 
+    const requestId = ++latestLoadRef.current;
     const data = await loadSectionPage(sectionId, page, { maxRetries: 2, baseDelay: 1000 });
 
     // A newer load was requested while this one was in flight — drop the result.
     if (latestLoadRef.current !== requestId) return;
 
     if (data) {
-      applySectionData(data);
+      if (activeSubCategoryRef.current === sectionId) {
+        // If data didn't change, avoid re-rendering items
+        if (!hasValidCache || !areItemsEqual(cached?.items || [], data.items)) {
+          applySectionData(data);
+        }
+      }
     } else {
       // Don't error if we have cached items to fall back to
       const fallbackCache = globalOrderItemsCache.get(cacheKey);
       if (fallbackCache && validateCacheData(fallbackCache)) {
         applySectionData(fallbackCache);
-      } else {
+      } else if (!hasValidCache) {
         toast.error('Failed to load menu items');
         setMenuItems([]);
       }
@@ -629,11 +704,6 @@ const MenuList = () => {
 
   // Category and section handlers
   const handleCategorySelect = async (categoryId: string) => {
-    // Clear any existing debounce timer
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
-
     const selectedCategory = categories.find(cat => cat.categoryId === categoryId);
     if (!selectedCategory) {
       toast.error('Failed to load category data');
@@ -644,47 +714,82 @@ const MenuList = () => {
       menu.menuSections || []
     );
 
-    // Reflect the selection immediately so the tab highlight is responsive and
-    // any in-flight background load for the previous section is seen as stale.
-    // The (network) load itself stays debounced to coalesce rapid switching.
+    const firstSection = allMenuSections[0];
+    const firstSectionId = firstSection ? firstSection.id : '';
+
+    // If already on this category and its first section items are already loaded, do not reload
+    if (activeCategory === categoryId && activeSubCategory === firstSectionId && menuItems !== null && menuItems.length > 0) {
+      return;
+    }
+
+    // Clear any existing debounce timer
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+      setDebounceTimer(null);
+    }
+
     setActiveCategory(categoryId);
     setCurrentPage(1);
     setMenuSections(allMenuSections);
     setCurrentCategory(selectedCategory.categoryName);
+    setActiveSubCategorySafe(firstSectionId);
 
-    const firstSection = allMenuSections[0];
-    setActiveSubCategorySafe(firstSection ? firstSection.id : '');
+    if (!firstSection) {
+      setMenuItems([]);
+      setTotalPages(1);
+      setTotalItems(0);
+      setLoadingItems(false);
+      return;
+    }
 
-    const newTimer = setTimeout(async () => {
-      if (!firstSection) {
-        setMenuItems([]);
-        setTotalPages(1);
-        setTotalItems(0);
-        setDebounceTimer(null);
-        return;
+    // Warm remaining sections in this category
+    preloadSections(allMenuSections, firstSection.id);
+
+    // Check cache immediately for instant display without delay or loading spinner
+    const cacheKey = `${firstSection.id}_page_1`;
+    const cached = globalOrderItemsCache.get(cacheKey);
+    if (cached && validateCacheData(cached)) {
+      ++latestLoadRef.current;
+      applySectionData(cached);
+      setLoadingItems(false);
+
+      // Revalidate in background if online and stale
+      if (isNetworkOnline() && !isCacheUsable(cached)) {
+        loadSectionPage(firstSection.id, 1).then(fresh => {
+          if (
+            fresh &&
+            !areItemsEqual(cached.items, fresh.items) &&
+            activeSubCategoryRef.current === firstSection.id
+          ) {
+            applySectionData(fresh);
+          }
+        });
       }
+      return;
+    }
 
-      if (firstSection.totalCount > 0) {
-        // Warm the remaining sections in this category so their tabs open instantly.
-        preloadSections(allMenuSections, firstSection.id);
-        await fetchMenuItems(firstSection.id, 1);
-      } else {
-        setMenuItems([]);
-        setTotalPages(1);
-        setTotalItems(0);
-      }
+    if (firstSection.totalCount === 0 && !isNetworkOnline()) {
+      setMenuItems([]);
+      setTotalPages(1);
+      setTotalItems(0);
+      setLoadingItems(false);
+      return;
+    }
 
-      // Clear the timer reference
-      setDebounceTimer(null);
-    }, 300); // 300ms debounce delay
-
-    setDebounceTimer(newTimer);
+    // Fall back to fetching if not yet cached
+    await fetchMenuItems(firstSection.id, 1);
   };
 
   const handleMenuSectionSelect = async (sectionId: string) => {
+    // If already on this section and items are already loaded, do not reload
+    if (activeSubCategory === sectionId && currentPage === 1 && menuItems !== null && menuItems.length > 0) {
+      return;
+    }
+
     // Clear any existing debounce timer
     if (debounceTimer) {
       clearTimeout(debounceTimer);
+      setDebounceTimer(null);
     }
 
     setActiveSubCategorySafe(sectionId);
@@ -695,20 +800,39 @@ const MenuList = () => {
       setCurrentSection(selectedSection.name);
     }
 
-    const newTimer = setTimeout(async () => {
-      if (selectedSection && selectedSection.totalCount > 0) {
-        await fetchMenuItems(sectionId, 1);
-      } else {
-        setMenuItems([]);
-        setTotalPages(1);
-        setTotalItems(0);
+    // Check cache immediately for instant display without delay or loading spinner
+    const cacheKey = `${sectionId}_page_1`;
+    const cached = globalOrderItemsCache.get(cacheKey);
+    if (cached && validateCacheData(cached)) {
+      ++latestLoadRef.current;
+      applySectionData(cached);
+      setLoadingItems(false);
+
+      // Revalidate in background if online and stale
+      if (isNetworkOnline() && !isCacheUsable(cached)) {
+        loadSectionPage(sectionId, 1).then(fresh => {
+          if (
+            fresh &&
+            !areItemsEqual(cached.items, fresh.items) &&
+            activeSubCategoryRef.current === sectionId
+          ) {
+            applySectionData(fresh);
+          }
+        });
       }
+      return;
+    }
 
-      // Clear the timer reference
-      setDebounceTimer(null);
-    }, 200); // 200ms debounce delay (slightly faster than category)
+    if ((!selectedSection || selectedSection.totalCount === 0) && !isNetworkOnline()) {
+      setMenuItems([]);
+      setTotalPages(1);
+      setTotalItems(0);
+      setLoadingItems(false);
+      return;
+    }
 
-    setDebounceTimer(newTimer);
+    // Fall back to fetching if not yet cached
+    await fetchMenuItems(sectionId, 1);
   };
 
 

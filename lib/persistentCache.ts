@@ -196,24 +196,34 @@ export class PersistentCache<V> {
     for (const [key, entry] of [...this.data.entries()]) {
       if (entry.t < cutoff) this.data.delete(key);
     }
+    // Cap entries in memory to maxEntries, shedding oldest
     if (this.data.size > this.maxEntries) {
       this.dropOldest(this.data.size - this.maxEntries);
     }
 
-    let json = this.serialize();
-    while (json.length > this.maxBytes && this.data.size > 0) {
-      this.dropOldest(Math.max(1, Math.floor(this.data.size / 4)));
-      json = this.serialize();
+    // Prepare entries for disk persistence (newest first)
+    const diskEntries = [...this.data.entries()].sort((a, b) => b[1].t - a[1].t);
+    let json = JSON.stringify(diskEntries.map(([key, entry]) => [key, entry.v, entry.t]));
+
+    // If serialized payload exceeds the byte cap, shed older entries from disk storage
+    // WITHOUT removing them from in-memory cache (this.data).
+    while (json.length > this.maxBytes && diskEntries.length > 0) {
+      const dropCount = Math.max(1, Math.floor(diskEntries.length / 4));
+      diskEntries.splice(diskEntries.length - dropCount, dropCount);
+      json = JSON.stringify(diskEntries.map(([key, entry]) => [key, entry.v, entry.t]));
     }
 
     try {
       store.setItem(scopeKey, json);
     } catch {
-      // Almost always QuotaExceededError. Shed half and retry once; if it still
-      // does not fit, keep the cache in memory and stop writing to disk.
-      this.dropOldest(Math.max(1, Math.ceil(this.data.size / 2)));
+      // Almost always QuotaExceededError. Shed half for disk and retry once;
+      // if it still does not fit, keep the cache in memory and stop writing to disk.
+      const reducedEntries = diskEntries.slice(0, Math.max(1, Math.floor(diskEntries.length / 2)));
       try {
-        store.setItem(scopeKey, this.serialize());
+        store.setItem(
+          scopeKey,
+          JSON.stringify(reducedEntries.map(([key, entry]) => [key, entry.v, entry.t]))
+        );
       } catch {
         this.disabled = true;
       }

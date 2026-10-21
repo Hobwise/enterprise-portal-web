@@ -587,76 +587,89 @@ const RestaurantMenu = () => {
   }, [categoriesData, hasInitialized, hasInitialLoadCompleted]);
 
   const handleCategorySelect = async (categoryId: string) => {
-    setActiveCategory(categoryId);
     const category = categories.find((c) => c.categoryId === categoryId);
-    if (category) {
-      const sections = category.menus[0]?.menuSections || [];
-      setMenuSections(sections);
+    if (!category) return;
 
-      if (sections.length > 0) {
-        const firstSection = sections[0];
-        setActiveSubCategory(firstSection.id);
+    const sections = category.menus[0]?.menuSections || [];
+    const firstSection = sections[0];
+    const firstSectionId = firstSection ? firstSection.id : '';
 
-        if (firstSection.totalCount > 0) {
-          // Reset pagination for new section
-          setCurrentPage(1);
-          setTotalPages(1);
-          setTotalItems(0);
-          
-          // Check global cache first with page info
-          const cacheKey = `${firstSection.id}_page_1`;
-          const cached = globalMenuItemsCache.get(cacheKey);
-          if (isCacheUsable(cached)) {
-            setMenuItems(cached.items);
-            setTotalPages(cached.totalPages || 1);
-            setTotalItems(cached.totalItems || 0);
-            setCurrentPage(1);
-          } else {
-            // Set loading state before fetching
-            setLoadingItems(true);
-            fetchMenuItems(firstSection.id, false, 1);
-          }
-        } else {
-          setMenuItems([]);
-          setTotalPages(1);
-          setTotalItems(0);
-        }
+    if (activeCategory === categoryId && activeSubCategory === firstSectionId && menuItems.length > 0) {
+      return;
+    }
 
-        // Background preload remaining sections
-        const remainingSections = sections.slice(1);
-        if (remainingSections.length > 0) {
-          setTimeout(() => {
-            preloadMenuSections(remainingSections, false);
-          }, 100);
-        }
+    setActiveCategory(categoryId);
+    setMenuSections(sections);
+
+    if (sections.length > 0) {
+      setActiveSubCategory(firstSectionId);
+
+      // Reset pagination for new section
+      setCurrentPage(1);
+      setTotalPages(1);
+      setTotalItems(0);
+
+      // Check global cache first with page info
+      const cacheKey = `${firstSectionId}_page_1`;
+      const cached = globalMenuItemsCache.get(cacheKey);
+      if (cached && (isCacheUsable(cached) || !isNetworkOnline())) {
+        setMenuItems(cached.items);
+        setTotalPages(cached.totalPages || 1);
+        setTotalItems(cached.totalItems || 0);
+        setCurrentPage(1);
+        setLoadingItems(false);
+      } else if (firstSection.totalCount > 0 || isNetworkOnline()) {
+        // Set loading state before fetching
+        setLoadingItems(true);
+        fetchMenuItems(firstSectionId, false, 1);
       } else {
         setMenuItems([]);
-        setActiveSubCategory('');
+        setTotalPages(1);
+        setTotalItems(0);
+        setLoadingItems(false);
       }
+
+      // Background preload remaining sections
+      const remainingSections = sections.slice(1);
+      if (remainingSections.length > 0) {
+        setTimeout(() => {
+          preloadMenuSections(remainingSections, false);
+        }, 100);
+      }
+    } else {
+      setMenuItems([]);
+      setActiveSubCategory('');
+      setLoadingItems(false);
     }
   };
 
   const handleMenuSectionSelect = (sectionId: string) => {
+    if (activeSubCategory === sectionId && currentPage === 1 && menuItems.length > 0) {
+      return;
+    }
+
     setActiveSubCategory(sectionId);
     setCurrentPage(1); // Always reset to page 1 when switching sections
     
     // Check global cache first for page 1
     const cacheKey = `${sectionId}_page_1`;
     const cached = globalMenuItemsCache.get(cacheKey);
-    if (isCacheUsable(cached)) {
+    if (cached && (isCacheUsable(cached) || !isNetworkOnline())) {
       setMenuItems(cached.items);
       setTotalPages(cached.totalPages || 1);
       setTotalItems(cached.totalItems || 0);
+      setLoadingItems(false);
     } else {
-      // Set loading state and fetch if section has items
+      // Set loading state and fetch if section has items or online
       const section = menuSections.find(s => s.id === sectionId);
-      if (section && section.totalCount > 0) {
+      if ((section && section.totalCount > 0) || isNetworkOnline()) {
         setLoadingItems(true);
         fetchMenuItems(sectionId, false, 1);
       } else {
         setMenuItems([]);
         setTotalPages(1);
         setTotalItems(0);
+        setLoadingItems(false);
       }
     }
   };

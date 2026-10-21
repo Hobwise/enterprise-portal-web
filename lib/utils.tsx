@@ -502,13 +502,43 @@ export const printPDF = async (
       const newTab = window.open(url, "_blank");
       if (newTab) {
         newTab.focus();
+        let printCompleted = false;
 
-        newTab.onload = () => {
-          if (newTab) {
-            newTab.print();
-            URL.revokeObjectURL(url);
+        const onLoadHandler = () => {
+          if (!printCompleted) {
+            printCompleted = true;
+            if (newTab) {
+              newTab.print();
+              URL.revokeObjectURL(url);
+            }
           }
         };
+
+        const onErrorHandler = () => {
+          if (!printCompleted) {
+            printCompleted = true;
+            if (newTab) {
+              newTab.print();
+              URL.revokeObjectURL(url);
+            }
+          }
+        };
+
+        const timeoutId = setTimeout(() => {
+          if (!printCompleted) {
+            printCompleted = true;
+            if (newTab) {
+              newTab.print();
+              URL.revokeObjectURL(url);
+            }
+          }
+        }, 3000);
+
+        newTab.onload = () => {
+          clearTimeout(timeoutId);
+          onLoadHandler();
+        };
+        newTab.onerror = onErrorHandler;
       }
     });
 };

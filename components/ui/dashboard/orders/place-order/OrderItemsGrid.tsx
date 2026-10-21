@@ -58,7 +58,7 @@ const OrderItemsGrid = ({
    
   return (
     <div className="p-6 ">
-      {loadingCategories || loadingItems || menuItems === null || menuItems.length === 0 ? (
+      {loadingItems || (menuItems === null && loadingCategories) || menuItems === null ? (
         <SpinnerLoader size="md" />
       ) : menuItems.length === 0 && searchQuery ? (
         <div className="flex flex-col items-center justify-center py-16">
