@@ -391,6 +391,10 @@ export async function manageSubscriptionv2(businessId: string, token: string) {
     })
     .catch((error) => {
       console.log("ERROR", error);
+      // Return null instead of showing info - let the UI handle it
+      // This allows users with active plans but no next payment to still
+      // add/update billing info when they click Manage Subscriptions
+      return null;
     });
 }
 

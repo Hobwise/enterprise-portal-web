@@ -221,21 +221,6 @@ const SignupForm = () => {
 
       <Spacer y={4} />
 
-      <CustomInput
-        type="text"
-        name="referralCode"
-        value={signupFormData.referralCode}
-        onChange={handleInputChange}
-        label=""
-        placeholder="Referral code (optional)"
-        autoComplete="off"
-        bgColor="bg-transparent lg:bg-white"
-        classnames="h-[58px] rounded-xl border border-secondaryColor/40 lg:border-transparent lg:shadow-[0_1px_2px_rgba(16,24,40,0.05)] data-[hover=true]:!border-secondaryColor/60 data-[focus=true]:!border-secondaryColor"
-        inputTextColor="text-white lg:text-[#1F2937]"
-      />
-
-      <Spacer y={6} />
-
       <CustomButton
         loading={loading}
         disabled={loading}

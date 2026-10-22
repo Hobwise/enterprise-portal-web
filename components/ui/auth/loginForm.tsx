@@ -228,8 +228,15 @@ const LoginForm = () => {
         redirectPath = "/business-activities";
       } else if (isGeneralStaff || isManager) {
         // 4. General Staff and Manager - redirect based on business availability
+        // Check if onboarding was completed (business data exists in localStorage)
+        const hasCompletedOnboarding = getJsonItemFromLocalStorage("business");
         if (!businesses || businesses.length === 0) {
-          redirectPath = "/dashboard";
+          if (!hasCompletedOnboarding) {
+            // User signed up but did not complete onboarding - redirect to business information
+            redirectPath = "/auth/business-information";
+          } else {
+            redirectPath = "/dashboard";
+          }
         } else if (businesses.length === 1) {
           // When user has exactly one business, go directly to dashboard
           redirectPath = "/dashboard";
