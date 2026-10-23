@@ -383,18 +383,22 @@ const BusinessInformationForm = () => {
         contents={businessTypes}
       />
 
-      <Spacer y={4} />
-      <CustomInput
-        type="text"
-        name="referralCode"
-        errorMessage={formErrors?.referralCode || response?.errors?.referralCode?.[0]}
-        onChange={handleInputChange}
-        value={businessFormData.referralCode}
-        label="Referral code"
-        placeholder="Referral code (optional)"
-        bgColor="bg-transparent lg:bg-white"
-        classnames="h-[58px] rounded-xl border border-secondaryColor/40 lg:border-transparent lg:shadow-[0_1px_2px_rgba(16,24,40,0.05)] data-[hover=true]:!border-secondaryColor/60 data-[focus=true]:!border-secondaryColor"
-      />
+      {!savedReferralCode && (
+        <>
+          <Spacer y={4} />
+          <CustomInput
+            type="text"
+            name="referralCode"
+            errorMessage={formErrors?.referralCode || response?.errors?.referralCode?.[0]}
+            onChange={handleInputChange}
+            value={businessFormData.referralCode}
+            label="Referral code"
+            placeholder="Referral code (optional)"
+            bgColor="bg-transparent lg:bg-white"
+            classnames="h-[58px] rounded-xl border border-secondaryColor/40 lg:border-transparent lg:shadow-[0_1px_2px_rgba(16,24,40,0.05)] data-[hover=true]:!border-secondaryColor/60 data-[focus=true]:!border-secondaryColor"
+          />
+        </>
+      )}
       <Spacer y={8} />
       <CustomButton loading={loading} disabled={loading} type="submit">
         Proceed
