@@ -2,17 +2,17 @@
 import { createBusiness } from "@/app/api/controllers/auth";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
-import SelectInput from "@/components/selectInput";
 import { businessTypes } from "@/lib/businessTypes";
 import { companyInfo } from "@/lib/companyInfo";
 import {
+  cn,
   getJsonItemFromLocalStorage,
   notify,
   saveJsonItemToLocalStorage,
 } from "@/lib/utils";
 import { Spacer } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import States from "../../../lib/cities.json";
 import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
 import { setJsonCookie } from "@/lib/cookies";
@@ -24,6 +24,147 @@ import {
   clearSignupReferralCode,
   getSignupReferralCode,
 } from "@/lib/referral";
+import { MdKeyboardArrowDown } from "react-icons/md";
+
+type BusinessSelectProps = {
+  label: string;
+  name: string;
+  value: string | number;
+  placeholder?: string;
+  contents: { label: string; value: string | number }[];
+  onChange: (e: { target: { name: string; value: string | number } }) => void;
+  errorMessage?: any;
+  disabled?: boolean;
+};
+
+const BusinessSelect = ({
+  label,
+  name,
+  value,
+  placeholder,
+  contents,
+  onChange,
+  errorMessage,
+  disabled,
+}: BusinessSelectProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isOpen]);
+
+  const selectedOption = contents.find(
+    (content) => String(content.value) === String(value)
+  );
+
+  const handleSelect = (selectedValue: string | number) => {
+    onChange({ target: { name, value: selectedValue } });
+    setIsOpen(false);
+  };
+
+  return (
+    <div ref={containerRef} className="w-full">
+      <label
+        htmlFor={name}
+        className="mb-1.5 block text-[14px] font-[500] text-[#000]"
+      >
+        {label}
+      </label>
+      <div className="relative">
+        <button
+          type="button"
+          id={name}
+          name={name}
+          disabled={disabled}
+          onClick={() => setIsOpen((prev) => !prev)}
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+          className={cn(
+            "flex h-[56px] w-full items-center justify-between rounded-[8px] border bg-white px-3 text-left text-[14px] outline-none transition-colors",
+            "hover:border-[#C3ADFF] focus:border-[#C3ADFF]",
+            disabled && "cursor-not-allowed bg-secondaryGrey",
+            errorMessage ? "border-red-500" : "border-[#E4E7EC]",
+            isOpen && "border-[#C3ADFF]"
+          )}
+        >
+          <span
+            className={cn(
+              "truncate",
+              selectedOption ? "text-black" : "text-[#98A2B3]"
+            )}
+          >
+            {selectedOption ? selectedOption.label : placeholder}
+          </span>
+          <MdKeyboardArrowDown
+            className={cn(
+              "ml-2 shrink-0 text-xl text-[#667085] transition-transform",
+              isOpen && "rotate-180"
+            )}
+          />
+        </button>
+
+        {isOpen && (
+          <ul
+            role="listbox"
+            aria-labelledby={name}
+            className="absolute z-50 mt-1 max-h-[260px] w-full overflow-y-auto rounded-[8px] border border-[#E4E7EC] bg-white py-1 shadow-lg"
+          >
+            {contents.length === 0 && (
+              <li className="px-3 py-2.5 text-[14px] text-[#98A2B3]">
+                No options available
+              </li>
+            )}
+            {contents.map((content) => {
+              const isSelected =
+                String(content.value) === String(value);
+              return (
+                <li key={content.value}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    onClick={() => handleSelect(content.value)}
+                    className={cn(
+                      "w-full px-3 py-2.5 text-left text-[14px] text-black transition-colors hover:bg-[#F4F0FF]",
+                      isSelected && "bg-[#F4F0FF] font-medium"
+                    )}
+                  >
+                    {content.label}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+      {errorMessage && (
+        <p className="mt-1 text-xs text-red-500">{errorMessage}</p>
+      )}
+    </div>
+  );
+};
 
 const BusinessInformationForm = () => {
   const router = useRouter();
@@ -346,34 +487,28 @@ const BusinessInformationForm = () => {
 
       <Spacer y={4} />
       <div className="flex flex-col md:flex-row  gap-3">
-        <SelectInput
-          key="business-state-select"
+        <BusinessSelect
           errorMessage={formErrors?.state || response?.errors?.state?.[0]}
           label={"Business State"}
           name="state"
           onChange={handleInputChange}
           value={businessFormData.state}
           placeholder={"Select state"}
-          defaultSelectedKeys={[]}
           contents={getStates()}
         />
 
-        <SelectInput
-          key="business-city-select"
+        <BusinessSelect
           errorMessage={formErrors?.city || response?.errors?.city?.[0]}
           label={"Business LGA"}
           name="city"
           onChange={handleInputChange}
           value={businessFormData.city}
           placeholder={"Select lga"}
-          defaultSelectedKeys={[]}
           contents={getCities()}
         />
       </div>
       <Spacer y={4} />
-      <SelectInput
-        key="business-category-select"
-        defaultSelectedKeys={["0"]}
+      <BusinessSelect
         errorMessage={formErrors?.businessCategory || response?.errors?.businessCategory?.[0]}
         label={"Business Category"}
         name="businessCategory"
