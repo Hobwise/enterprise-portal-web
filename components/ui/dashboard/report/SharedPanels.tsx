@@ -3,8 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import moment from 'moment';
 import { useRouter } from 'next/navigation';
-import { Button, Skeleton } from '@nextui-org/react';
-import { FiDownload } from 'react-icons/fi';
+import { Skeleton } from '@nextui-org/react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { TbArrowsSort, TbArrowUp, TbArrowDown } from 'react-icons/tb';
 import { Bar, Doughnut } from 'react-chartjs-2';
@@ -21,7 +20,8 @@ import {
 } from 'chart.js';
 import { formatPrice } from '@/lib/utils';
 import { slugifyReportName } from '@/lib/reportRoutes';
-import { ExportType } from './exportHelpers';
+import { ExportType, ExportTypeValue } from './exportHelpers';
+import ExportButtons from './ExportButtons';
 import { AvailableReport, BarRow, BreakdownRow, StatCard } from './types';
 
 ChartJS.register(
@@ -34,6 +34,36 @@ ChartJS.register(
 );
 
 export type SortDirection = 'asc' | 'desc';
+
+/**
+ * Every report table is wrapped in `overflow-x-auto`, but `w-full` alone lets the
+ * table shrink to the viewport so the wrapper never scrolls and columns get
+ * crushed on phones. A per-column-count min-width keeps `w-full` stretching the
+ * table on desktop while forcing horizontal scroll once the columns no longer
+ * fit. Roughly 110px per column (cell padding included) so no single column is
+ * squeezed below a readable width. Values are literal class strings so Tailwind's
+ * scanner can see them.
+ */
+const REPORT_TABLE_MIN_WIDTH_CLASSES: Record<number, string> = {
+  1: 'min-w-[320px]',
+  2: 'min-w-[320px]',
+  3: 'min-w-[330px]',
+  4: 'min-w-[440px]',
+  5: 'min-w-[550px]',
+  6: 'min-w-[660px]',
+  7: 'min-w-[770px]',
+  8: 'min-w-[880px]',
+  9: 'min-w-[990px]',
+  10: 'min-w-[1100px]',
+  11: 'min-w-[1210px]',
+  12: 'min-w-[1320px]',
+};
+
+export const reportTableClass = (columnCount: number): string =>
+  `w-full text-sm ${
+    REPORT_TABLE_MIN_WIDTH_CLASSES[columnCount] ??
+    REPORT_TABLE_MIN_WIDTH_CLASSES[10]
+  }`;
 
 export type SortableValue = string | number | boolean | null | undefined;
 
@@ -118,7 +148,7 @@ export const SortableTH = <K extends string>({
     <th
       className={
         className ??
-        `${alignClass} px-5 py-3 font-medium select-none whitespace-nowrap`
+        `${alignClass} px-3 sm:px-5 py-3 font-medium select-none whitespace-nowrap`
       }
     >
       <button
@@ -996,7 +1026,7 @@ interface GenericReportPanelProps {
   data?: Record<string, unknown> | unknown[] | null;
   isLoading?: boolean;
   onExport?: (exportType: number) => void | Promise<void>;
-  isExporting?: boolean;
+  exportingType?: ExportTypeValue | null;
 }
 
 /**
@@ -1015,7 +1045,7 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [page, setPage] = useState(1);
 
@@ -1159,7 +1189,7 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
 
       {shouldRenderTable && (
         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
             <div className="flex items-center gap-3 flex-wrap">
               <h3 className="text-base font-semibold text-gray-900">
                 {reportName}
@@ -1173,32 +1203,16 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
             </div>
             {onExport && (
               <div className="flex items-center gap-2 px-1 py-1">
-                <Button
-                  variant="bordered"
-                  onPress={handleExportExcel}
-                  isLoading={isExporting}
-                  startContent={
-                    isExporting ? null : <FiDownload size={14} />
-                  }
-                  className="border border-gray-200 text-gray-700 bg-white rounded-lg text-xs h-9"
-                >
-                  Export Excel
-                </Button>
-                <Button
-                  onPress={handleExportPdf}
-                  isLoading={isExporting}
-                  startContent={
-                    isExporting ? null : <FiDownload size={14} />
-                  }
-                  className="bg-primaryColor text-white rounded-lg text-xs h-9"
-                >
-                  Export PDF
-                </Button>
+                <ExportButtons
+                  onExportExcel={handleExportExcel}
+                  onExportPdf={handleExportPdf}
+                  exportingType={exportingType}
+                />
               </div>
             )}
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className={reportTableClass(columns.length)}>
               {columns.length > 0 && (
                 <thead className="bg-gray-50 text-gray-600">
                   <tr>
@@ -1220,7 +1234,7 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
                   <tr>
                     <td
                       colSpan={Math.max(columns.length, 1)}
-                      className="px-5 py-8 text-center text-sm text-gray-500"
+                      className="px-3 sm:px-5 py-8 text-center text-sm text-gray-500"
                     >
                       No data for this period
                     </td>
@@ -1234,7 +1248,7 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
                       {columns.map((col, colIdx) => (
                         <td
                           key={col}
-                          className={`px-5 py-4 ${
+                          className={`px-3 sm:px-5 py-4 ${
                             colIdx === 0
                               ? 'text-gray-900 font-medium'
                               : 'text-gray-700'
@@ -1250,7 +1264,7 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
             </table>
           </div>
           {sorted.length > GENERIC_PAGE_SIZE && (
-            <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 text-xs text-gray-600">
+            <div className="flex items-center justify-between px-4 md:px-5 py-3 border-t border-gray-100 text-xs text-gray-600">
               <span>
                 Page {safePage} of {totalPages}
               </span>

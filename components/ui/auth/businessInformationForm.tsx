@@ -19,12 +19,20 @@ import { setJsonCookie } from "@/lib/cookies";
 import { getUserSubscription } from "@/app/api/controllers/dashboard/settings";
 import { forceTokenRefresh } from "@/app/api/apiService";
 import useLogout from "@/hooks/cachedEndpoints/useLogout";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import {
+  clearSignupReferralCode,
+  getSignupReferralCode,
+} from "@/lib/referral";
 
 const BusinessInformationForm = () => {
   const router = useRouter();
   const { refetch } = useSubscription();
   const { logoutFn } = useLogout();
+  const { userData } = useGlobalContext();
   const userInformation = getJsonItemFromLocalStorage("userInformation");
+
+  const savedReferralCode = getSignupReferralCode();
 
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<any>(null);
@@ -45,6 +53,7 @@ const BusinessInformationForm = () => {
     city: "",
     contactEmailAddress: "",
     contactPhoneNumber: "",
+    referralCode: savedReferralCode,
   });
 
   const handleInputChange = (e: { target: { name: any; value: any } }) => {
@@ -151,14 +160,26 @@ const BusinessInformationForm = () => {
     });
 
     try {
+      // Carry the referral code captured at signup into the business creation
+      // request so the referral is applied to the new business. Prefer the code
+      // entered in the form, then the code persisted during signup, then fall
+      // back to any code returned on the user from email confirmation.
+      const referralCode =
+        businessFormData.referralCode ||
+        getSignupReferralCode() ||
+        String(userData?.referralCode ?? "") ||
+        String(userInformation?.referralCode ?? "");
+
       const data = await createBusiness({
         ...businessFormData,
         businessCategory: +businessFormData.businessCategory,
+        ...(referralCode ? { referralCode } : {}),
       });
 
       setResponse(data);
 
       if (data?.data?.isSuccessful) {
+        clearSignupReferralCode();
         // Show progress update
         notify({
           title: "Business Created",
@@ -326,27 +347,33 @@ const BusinessInformationForm = () => {
       <Spacer y={4} />
       <div className="flex flex-col md:flex-row  gap-3">
         <SelectInput
+          key="business-state-select"
           errorMessage={formErrors?.state || response?.errors?.state?.[0]}
           label={"Business State"}
           name="state"
           onChange={handleInputChange}
           value={businessFormData.state}
           placeholder={"Select state"}
+          defaultSelectedKeys={[]}
           contents={getStates()}
         />
 
         <SelectInput
+          key="business-city-select"
           errorMessage={formErrors?.city || response?.errors?.city?.[0]}
           label={"Business LGA"}
           name="city"
           onChange={handleInputChange}
           value={businessFormData.city}
           placeholder={"Select lga"}
+          defaultSelectedKeys={[]}
           contents={getCities()}
         />
       </div>
       <Spacer y={4} />
       <SelectInput
+        key="business-category-select"
+        defaultSelectedKeys={["0"]}
         errorMessage={formErrors?.businessCategory || response?.errors?.businessCategory?.[0]}
         label={"Business Category"}
         name="businessCategory"
@@ -356,6 +383,22 @@ const BusinessInformationForm = () => {
         contents={businessTypes}
       />
 
+      {!savedReferralCode && (
+        <>
+          <Spacer y={4} />
+          <CustomInput
+            type="text"
+            name="referralCode"
+            errorMessage={formErrors?.referralCode || response?.errors?.referralCode?.[0]}
+            onChange={handleInputChange}
+            value={businessFormData.referralCode}
+            label="Referral code"
+            placeholder="Referral code (optional)"
+            bgColor="bg-transparent lg:bg-white"
+            classnames="h-[58px] rounded-xl border border-secondaryColor/40 lg:border-transparent lg:shadow-[0_1px_2px_rgba(16,24,40,0.05)] data-[hover=true]:!border-secondaryColor/60 data-[focus=true]:!border-secondaryColor"
+          />
+        </>
+      )}
       <Spacer y={8} />
       <CustomButton loading={loading} disabled={loading} type="submit">
         Proceed

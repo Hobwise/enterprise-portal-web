@@ -481,8 +481,8 @@ export default function PurchaseRequestPage() {
   return (
     <div className="w-full min-h-screen">
       {/* Top Tabs */}
-      <div className="flex items-center justify-between px-6 pt-4 pb-2">
-        <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center justify-between px-6 pt-4 pb-2 gap-4">
+        <div className="flex flex-wrap items-center gap-1">
           <button
             onClick={() => setActiveTab('create')}
             className={cn(

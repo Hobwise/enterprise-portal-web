@@ -45,7 +45,7 @@ const ViewMenuModal = ({
         {() => (
           <>
             <ModalBody>
-              <h2 className="text-[24px] leading-3 mt-8 mb-2 text-black font-semibold">
+              <h2 className="text-[18px] sm:text-[24px] leading-6 sm:leading-8 mt-4 sm:mt-8 mb-2 text-black font-semibold">
                 {viewMenuMode === 'current' ? 'Menu Sections' : 'All menus'}
               </h2>
 
@@ -55,7 +55,7 @@ const ViewMenuModal = ({
                   categories && categories.length > 0 ? (
                     categories.map((category: any) => (
                       <div
-                        className="text-black flex justify-between text-sm border-b border-primaryGrey py-3"
+                        className="text-black flex justify-between text-sm border-b border-primaryGrey py-2.5 sm:py-3"
                         key={category.categoryId}
                       >
                         <div>
@@ -69,7 +69,7 @@ const ViewMenuModal = ({
                               <span className="mr-3">
                                 <RiEdit2Line
                                   onClick={() => handleEditSection(category)}
-                                  className="text-[18px] text-[#5F35D2] cursor-pointer"
+                                  className="text-base sm:text-[18px] text-[#5F35D2] cursor-pointer"
                                 />
                               </span>
                             </Tooltip>
@@ -108,7 +108,7 @@ const ViewMenuModal = ({
                 menuSections && menuSections.length > 0 ? (
                   menuSections.map((section: any) => (
                     <div
-                      className="text-black flex justify-between text-sm border-b border-primaryGrey py-3"
+                      className="text-black flex justify-between text-sm border-b border-primaryGrey py-2.5 sm:py-3"
                       key={section.id}
                     >
                       <div>
@@ -119,7 +119,7 @@ const ViewMenuModal = ({
                           <span className="mr-3">
                             <RiEdit2Line
                               onClick={() => handleEditMenu(section)}
-                              className="text-[18px] text-[#5F35D2] cursor-pointer"
+                              className="text-base sm:text-[18px] text-[#5F35D2] cursor-pointer"
                             />
                           </span>
                         </Tooltip>

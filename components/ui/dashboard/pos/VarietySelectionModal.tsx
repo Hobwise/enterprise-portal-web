@@ -6,6 +6,7 @@ import { MenuItem, Variety } from '@/app/pos/types';
 
 interface OrderItem {
   id: string;
+  itemID?: string;
   itemName: string;
   count: number;
   isPacked?: boolean;
@@ -35,14 +36,20 @@ export const VarietySelectionModal: React.FC<VarietySelectionModalProps> = ({
 
   if (!isOpen || !item) return null;
 
-  // Check if item or variety is in cart
+  // Check if item or variety is in cart. Match on the underlying itemID so the
+  // state is consistent regardless of which section/menu composite key the
+  // item was added under.
   const isInCart = (itemId: string): boolean => {
-    return orderItems.some((orderItem) => orderItem.id === itemId);
+    return orderItems.some(
+      (orderItem) => orderItem.itemID === itemId || orderItem.id === itemId
+    );
   };
 
   // Get packing status from cart
   const getPackingStatus = (itemId: string): boolean => {
-    const orderItem = orderItems.find((oi) => oi.id === itemId);
+    const orderItem = orderItems.find(
+      (oi) => oi.itemID === itemId || oi.id === itemId
+    );
     return orderItem?.isPacked || false;
   };
 

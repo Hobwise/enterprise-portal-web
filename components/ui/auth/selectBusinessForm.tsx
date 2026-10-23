@@ -3,6 +3,7 @@ import {
   loginUserSelectedBusiness,
 } from "@/app/api/controllers/auth";
 import { getUserHomeRoute } from "@/lib/userTypeUtils";
+import { identifyUser, flushPostHog } from "@/lib/posthogAnalytics";
 import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByCooperate";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import { decryptPayload } from "@/lib/encrypt-decrypt";
@@ -174,6 +175,9 @@ const SelectBusinessForm = () => {
             secure: process.env.NODE_ENV === 'production',
           });
           saveJsonItemToLocalStorage("userInformation", decryptedData?.data);
+          identifyUser(decryptedData?.data);
+          // Push the identify out before navigating away.
+          flushPostHog();
 
           // Navigate to the correct home for this user type
           router.replace(getUserHomeRoute(decryptedData?.data));
@@ -356,17 +360,18 @@ const SelectBusinessForm = () => {
                 }
               }}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <Avatar
                     showFallback={true}
                     size="lg"
                     src={item?.logoImage ? `data:image/jpeg;base64,${item.logoImage}` : undefined}
                     name={item?.name}
                     alt={`${item?.name} logo`}
+                    className="shrink-0"
                   />
-                  <div className="flex flex-col">
-                    <span className="font-[600] text-[14px]">{item?.name}</span>
+                  <div className="flex min-w-0 flex-col">
+                    <span className="truncate font-[600] text-[14px]">{item?.name}</span>
                     {(item?.city || item?.state) && (
                       <span className="text-[12px] font-[400] text-gray-600">
                         {item?.city}
@@ -377,7 +382,7 @@ const SelectBusinessForm = () => {
                   </div>
                 </div>
                 {isThisCardLoading && (
-                  <div aria-label="Loading">
+                  <div aria-label="Loading" className="shrink-0">
                     <SmallLoader />
                   </div>
                 )}

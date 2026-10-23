@@ -249,49 +249,113 @@ const ReservationList = ({ reservation, searchQuery, data, refetch }: any) => {
 
   return (
     <section className="border border-primaryGrey rounded-lg overflow-hidden">
-      <Table
-        radius="lg"
-        isCompact
-        removeWrapper
-        allowsSorting
-        aria-label="list of reservations"
-        bottomContent={bottomContent}
-        bottomContentPlacement="outside"
-        classNames={classNames}
-        selectedKeys={selectedKeys}
-        // selectionMode='multiple'
-        sortDescriptor={sortDescriptor}
-        topContentPlacement="outside"
-        onSelectionChange={setSelectedKeys}
-        onSortChange={setSortDescriptor}
-      >
-        <TableHeader columns={headerColumns}>
-          {(column) => (
-            <TableColumn
-              key={column.uid}
-              align={column.uid === "actions" ? "center" : "start"}
-              allowsSorting={column.sortable}
-            >
-              {column.name}
-            </TableColumn>
+      {isMobile ? (
+        <div className="divide-y divide-primaryGrey">
+          {(!displayData && !filteredReservation) ? (
+             <div className="flex justify-center items-center py-16">
+               <p className="text-textGrey">Loading...</p>
+             </div>
+          ) : (displayData || filteredReservation)?.length === 0 ? (
+             <div className="flex justify-center items-center py-16 text-textGrey">
+               No reservation found
+             </div>
+          ) : (
+            (displayData || filteredReservation)?.map((item: any, index: number) => (
+              <article
+                key={item?.id || item?.name || `reservation-row-${index}`}
+                className="p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-end justify-end mb-3 mt-2">
+                  <div className="ml-2" onClick={(e) => e.stopPropagation()}>
+                    {renderCell(item, "actions")}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-black text-[15px]">
+                        {renderCell(item, "reservationName")}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-textGrey uppercase mb-1">
+                      Quantity
+                    </div>
+                    <div className="text-black font-semibold text-[15px]">
+                      {renderCell(item, "quantity")}
+                    </div>
+                  </div>
+                  <div className="col-span-2">
+                    <div className="text-[11px] text-textGrey uppercase mb-1">
+                      Description
+                    </div>
+                    <div className="text-black text-[13px]">
+                      {renderCell(item, "reservationDescription")}
+                    </div>
+                  </div>
+                  <div className="col-span-2">
+                    <div className="text-[11px] text-textGrey uppercase mb-1">
+                      Minimum Spend
+                    </div>
+                    <div className="text-black text-[13px] truncate">
+                      {renderCell(item, "minimumSpend")}
+                    </div>
+                  </div>
+                </div>
+              </article>
+            ))
           )}
-        </TableHeader>
-        <TableBody
-          emptyContent={"No reservation found"}
-          items={displayData || filteredReservation}
-        >
-          {(item, index) => (
-            <TableRow
-              key={item?.id || item?.name || `reservation-row-${index}`}
-              className="cursor-pointer hover:bg-gray-50 transition-colors"
-            >
-              {(columnKey) => (
-                <TableCell>{renderCell(item, columnKey)}</TableCell>
+          {bottomContent}
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <Table
+            radius="lg"
+            isCompact
+            removeWrapper
+            allowsSorting
+            aria-label="list of reservations"
+            bottomContent={bottomContent}
+            bottomContentPlacement="outside"
+            classNames={classNames}
+            selectedKeys={selectedKeys}
+            // selectionMode='multiple'
+            sortDescriptor={sortDescriptor}
+            topContentPlacement="outside"
+            onSelectionChange={setSelectedKeys}
+            onSortChange={setSortDescriptor}
+          >
+            <TableHeader columns={headerColumns}>
+              {(column) => (
+                <TableColumn
+                  key={column.uid}
+                  align={column.uid === "actions" ? "center" : "start"}
+                  allowsSorting={column.sortable}
+                >
+                  {column.name}
+                </TableColumn>
               )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+            </TableHeader>
+            <TableBody
+              emptyContent={"No reservation found"}
+              items={displayData || filteredReservation}
+            >
+              {(item, index) => (
+                <TableRow
+                  key={item?.id || item?.name || `reservation-row-${index}`}
+                  className="cursor-pointer hover:bg-gray-50 transition-colors"
+                >
+                  {(columnKey) => (
+                    <TableCell>{renderCell(item, columnKey)}</TableCell>
+                  )}
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       {/* Edit Reservation Modal */}
       {selectedReservation && (

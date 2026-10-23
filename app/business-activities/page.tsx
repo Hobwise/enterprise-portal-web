@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Menu, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/ui/dashboard/header';
 import OrderDetailModal, { OrderDetailData } from '@/components/ui/dashboard/orders/OrderDetailModal';
@@ -53,18 +53,17 @@ interface OrderCardProps {
   comment?: string;
   orderNumber: string;
   orderId: string;
-  categoryId: string;
   businessId: string;
   onCardClick?: () => void;
   onComplete?: () => void;
 }
 
-interface SwipeableOrderItemProps {
+interface OrderItemRowProps {
   order: Order;
   idx: number;
 }
 
-const SwipeableOrderItem: React.FC<SwipeableOrderItemProps> = ({ order }) => {
+const OrderItemRow: React.FC<OrderItemRowProps> = ({ order }) => {
   return (
     <div className="border-b border-gray-100 last:border-0 py-2 flex justify-between items-start">
       <div className="flex-1">
@@ -76,86 +75,8 @@ const SwipeableOrderItem: React.FC<SwipeableOrderItemProps> = ({ order }) => {
   );
 };
 
-const OrderCard: React.FC<OrderCardProps> = ({ table, time, timeColor, orders, comment, orderNumber, orderId, categoryId, businessId, onCardClick, onComplete }) => {
-  const [swipeY, setSwipeY] = useState<number>(0);
-  const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [startY, setStartY] = useState<number>(0);
-  const [isCompleting, setIsCompleting] = useState<boolean>(false);
+const OrderCard: React.FC<OrderCardProps> = ({ table, time, timeColor, orders, comment, orderNumber, orderId, businessId, onCardClick, onComplete }) => {
   const [isUpdatingTime, setIsUpdatingTime] = useState<boolean>(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const handleStart = (clientY: number) => {
-    setIsDragging(true);
-    setStartY(clientY - swipeY);
-  };
-
-  const handleMove = (clientY: number) => {
-    if (!isDragging) return;
-    const y = clientY - startY;
-    // Only allow upward swipe (negative values)
-    const minSwipe = -280;
-    const maxSwipe = 0;
-    setSwipeY(Math.max(minSwipe, Math.min(maxSwipe, y)));
-  };
-
-  const handleEnd = async () => {
-    const currentSwipeY = swipeY;
-    setIsDragging(false);
-    // If swiped up more than 140px, trigger complete
-    if (currentSwipeY < -140) {
-      setSwipeY(-280);
-      await handleComplete();
-    } else {
-      setSwipeY(0);
-    }
-  };
-
-  const handleComplete = useCallback(async () => {
-    if (isCompleting) return;
-
-    setIsCompleting(true);
-    try {
-      const response = await completeOrder(categoryId, orderId);
-
-      if ((response as any)?.isSuccessful || response?.data) {
-        notify({
-          title: "Success",
-          text: "Order marked as complete",
-          type: "success",
-        });
-
-        // Reset swipe and delay refresh to allow backend to process
-        setSwipeY(0);
-
-        // Delay refresh to allow backend to process the completion
-        // This prevents fetching stale data due to race condition
-        console.log('⏳ Waiting 1.5s before refreshing to ensure order is marked complete');
-        setTimeout(() => {
-          console.log('🔄 Refreshing orders after completion');
-          if (onComplete) {
-            onComplete();
-          }
-        }, 1500);
-      } else {
-        notify({
-          title: "Error",
-          text: "Failed to complete order",
-          type: "error",
-        });
-        setSwipeY(0);
-      }
-    } catch (error) {
-      console.error('Error completing order:', error);
-      notify({
-        title: "Error",
-        text: "Failed to complete order",
-        type: "error",
-      });
-      setSwipeY(0);
-    } finally {
-      setIsCompleting(false);
-    }
-  }, [isCompleting, categoryId, orderId, onComplete]);
 
   const handleAddTime = async (additionalMins: number) => {
     if (isUpdatingTime) return;
@@ -220,147 +141,82 @@ const OrderCard: React.FC<OrderCardProps> = ({ table, time, timeColor, orders, c
     }
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.time-buttons')) return;
-    handleStart(e.clientY);
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if ((e.target as HTMLElement).closest('.time-buttons')) return;
-    handleStart(e.touches[0].clientY);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => handleMove(e.touches[0].clientY);
-  const handleTouchEnd = () => handleEnd();
-
-  useEffect(() => {
-    if (isDragging) {
-      const handleMouseMove = (e: MouseEvent) => {
-        const y = e.clientY - startY;
-        const minSwipe = -280;
-        const maxSwipe = 0;
-        setSwipeY(Math.max(minSwipe, Math.min(maxSwipe, y)));
-      };
-
-      const handleMouseUp = async () => {
-        const currentSwipeY = swipeY;
-        setIsDragging(false);
-        if (currentSwipeY < -140) {
-          setSwipeY(-280);
-          await handleComplete();
-        } else {
-          setSwipeY(0);
-        }
-      };
-
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging, startY, swipeY, handleComplete]);
-
   return (
-    <div className="relative h-auto  w-full md:w-[calc(20%-0.8rem)] md:flex-shrink-0">
-      {/* Complete Action Background (Bottom) */}
-      <div className="absolute inset-0 flex items-end rounded-lg overflow-hidden">
-        <div className="w-full h-full bg-primaryColor flex flex-col items-center justify-center gap-2">
-          <Check className="w-8 h-8 text-white" />
-          <span className="text-white font-semibold text-sm">
-            {isCompleting ? 'Completing...' : 'Complete Order'}
-          </span>
+    <div className="bg-white rounded-lg shadow-sm overflow-hidden w-full md:w-[calc(33.333%-0.667rem)] md:flex-shrink-0">
+      <div
+        className={`${timeColor} text-white px-4 py-3 flex justify-between items-center cursor-pointer`}
+        onClick={onCardClick}
+      >
+        <span className="font-semibold">{table}</span>
+        <span className="font-bold text-lg">{time}</span>
+      </div>
+
+      <div className="p-4 cursor-pointer" onClick={onCardClick}>
+        <div className="min-h-[280px] max-h-[280px] overflow-hidden">
+          <div className="space-y-1">
+            {orders.slice(0, 4).map((order, idx) => (
+              <OrderItemRow key={idx} order={order} idx={idx} />
+            ))}
+
+            {orders.length > 3 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCardClick?.();
+                }}
+                className=" p-2 text-primaryColor hover:bg-pink200 transition-colors text-xs font-medium rounded-md border border-primaryColor"
+              >
+                Show +{orders.length - 4} more item{orders.length - 3 !== 1 ? 's' : ''}
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-blue-50 border-l-4 border-blue-400 p-3 mt-3 h-[70px] overflow-y-auto overflow-hidden">
+          <div className="text-xs font-semibold text-gray-700 mb-1">COMMENT</div>
+          <div className={`text-xs ${comment ? 'text-blue-900' : 'text-gray-400 italic'}`}>
+            {comment || 'No comment'}
+          </div>
         </div>
       </div>
 
-      {/* Swipeable Card */}
-      <div
-        ref={containerRef}
-        className={`relative bg-white  rounded-lg shadow-sm overflow-hidden ${
-          isDragging ? 'cursor-grabbing' : 'cursor-grab'
-        } transition-transform ${isDragging ? '' : 'duration-300 ease-out'}`}
-        style={{ transform: `translateY(${swipeY}px)` }}
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        <div
-          className={`${timeColor} text-white px-4 py-3 flex justify-between items-center cursor-pointer`}
-          onClick={onCardClick}
+      <div className="flex border-t border-gray-200 time-buttons">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAddTime(5);
+          }}
+          disabled={isUpdatingTime}
+          className={`flex-1 py-3 text-center bg-[#E6DDFF] text-primaryColor hover:bg-pink200 transition-colors text-sm font-medium ${
+            isUpdatingTime ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
         >
-          <span className="font-semibold">{table}</span>
-          <span className="font-bold text-lg">{time}</span>
-        </div>
-
-        <div className="p-4" onClick={onCardClick}>
-          <div className="min-h-[280px] max-h-[280px] overflow-hidden">
-            <div className="space-y-1">
-              {orders.slice(0, 4).map((order, idx) => (
-                <SwipeableOrderItem key={idx} order={order} idx={idx} />
-              ))}
-
-              {orders.length > 3 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCardClick?.();
-                  }}
-                  className=" p-2 text-primaryColor hover:bg-pink200 transition-colors text-xs font-medium rounded-md border border-primaryColor"
-                >
-                  Show +{orders.length - 4} more item{orders.length - 3 !== 1 ? 's' : ''}
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="bg-blue-50 border-l-4 border-blue-400 p-3 mt-3 h-[70px] overflow-y-auto overflow-hidden">
-            <div className="text-xs font-semibold text-gray-700 mb-1">COMMENT</div>
-            <div className={`text-xs ${comment ? 'text-blue-900' : 'text-gray-400 italic'}`}>
-              {comment || 'No comment'}
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex border-t border-gray-200 time-buttons">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleAddTime(5);
-            }}
-            disabled={isUpdatingTime}
-            className={`flex-1 py-3 text-center bg-[#E6DDFF] text-primaryColor hover:bg-pink200 transition-colors text-sm font-medium ${
-              isUpdatingTime ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-          >
-            {isUpdatingTime ? 'Updating...' : '+5mins'}
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleAddTime(10);
-            }}
-            disabled={isUpdatingTime}
-            className={`flex-1 py-3 text-center bg-[#D6C7FF] text-primaryColor hover:bg-pink200 transition-colors text-sm font-medium border-l border-r border-gray-200 ${
-              isUpdatingTime ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-          >
-            {isUpdatingTime ? 'Updating...' : '+10mins'}
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleAddTime(15);
-            }}
-            disabled={isUpdatingTime}
-            className={`flex-1 py-3 text-center bg-[#C8B4FF] text-primaryColor hover:bg-pink200 transition-colors text-sm font-medium ${
-              isUpdatingTime ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-          >
-            {isUpdatingTime ? 'Updating...' : '+15mins'}
-          </button>
-        </div>
+          {isUpdatingTime ? 'Updating...' : '+5mins'}
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAddTime(10);
+          }}
+          disabled={isUpdatingTime}
+          className={`flex-1 py-3 text-center bg-[#D6C7FF] text-primaryColor hover:bg-pink200 transition-colors text-sm font-medium border-l border-r border-gray-200 ${
+            isUpdatingTime ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          {isUpdatingTime ? 'Updating...' : '+10mins'}
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAddTime(15);
+          }}
+          disabled={isUpdatingTime}
+          className={`flex-1 py-3 text-center bg-[#C8B4FF] text-primaryColor hover:bg-pink200 transition-colors text-sm font-medium ${
+            isUpdatingTime ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          {isUpdatingTime ? 'Updating...' : '+15mins'}
+        </button>
       </div>
     </div>
   );
@@ -377,6 +233,7 @@ export default function RestaurantOrders() {
   const [businessId, setBusinessId] = useState<string>('');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [primaryAssignment, setPrimaryAssignment] = useState<string>('');
+  const [isCompletingOrder, setIsCompletingOrder] = useState(false);
 
   // Calculate time color based on estimated completion time
   const getTimeColor = (estimatedCompletionTime: string): string => {
@@ -572,6 +429,48 @@ export default function RestaurantOrders() {
     }
   };
 
+  // Complete the order currently open in the detail modal. Works the same on
+  // desktop, tablet and mobile since it is a plain button (no drag gesture).
+  const handleCompleteOrder = async () => {
+    if (!selectedOrder || isCompletingOrder) return;
+
+    setIsCompletingOrder(true);
+    try {
+      const response = await completeOrder(categoryId, selectedOrder.id);
+
+      if ((response as any)?.isSuccessful || response?.data) {
+        notify({
+          title: "Success",
+          text: "Order marked as complete",
+          type: "success",
+        });
+
+        setIsModalOpen(false);
+
+        // Delay refresh to allow the backend to process the completion and
+        // avoid fetching stale data due to a race condition.
+        setTimeout(() => {
+          refreshOrders();
+        }, 1500);
+      } else {
+        notify({
+          title: "Error",
+          text: "Failed to complete order",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      console.error('Error completing order:', error);
+      notify({
+        title: "Error",
+        text: "Failed to complete order",
+        type: "error",
+      });
+    } finally {
+      setIsCompletingOrder(false);
+    }
+  };
+
   // Show loading during initial load
   if (isLoading) {
     return (
@@ -643,7 +542,6 @@ export default function RestaurantOrders() {
                 timeColor={getTimeColor(order.estimatedCompletionTime)}
                 orderNumber={order.reference}
                 orderId={order.orderId}
-                categoryId={categoryId}
                 businessId={businessId}
                 orders={order.details.map((detail) => ({
                   name: detail.itemName,
@@ -664,6 +562,8 @@ export default function RestaurantOrders() {
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
         orderData={selectedOrder}
+        onComplete={handleCompleteOrder}
+        isCompleting={isCompletingOrder}
       />
     </div>
   );

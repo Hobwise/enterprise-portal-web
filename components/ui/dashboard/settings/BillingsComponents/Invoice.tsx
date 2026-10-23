@@ -22,7 +22,8 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
   setDownloadClickedInvoice,
 }) => {
   const userInformation = getJsonItemFromLocalStorage("userInformation");
-  const business = userInformation?.businesses[0];
+  const businesses = userInformation?.businesses;
+  const business = businesses ? businesses[0] : null;
   const invoiceRef = useRef<HTMLDivElement>(null);
 
   const mapPlan = (plan: number) => {

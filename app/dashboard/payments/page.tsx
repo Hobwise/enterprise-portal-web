@@ -21,7 +21,6 @@ import { VscLoading } from "react-icons/vsc";
 import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 import { CustomButton } from "@/components/customButton";
 import DateRangeDisplay from "@/components/ui/dashboard/DateRangeDisplay";
-import CustomPagination from "@/components/ui/dashboard/settings/BillingsComponents/CustomPagination";
 import PaymentCard from "@/components/ui/dashboard/payments/paymentCard";
 
 const Payments: React.FC = () => {
@@ -162,13 +161,13 @@ const Payments: React.FC = () => {
           Review all payment history
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-row items-center flex-wrap gap-3 w-full md:w-auto mt-4 md:mt-0">
           {dropdownComponent}
           {data?.categories?.data?.paymentCategories?.length > 0 && (
             <>
-              <div>
+              <div className="flex-1 w-full md:w-auto min-w-[150px]">
                 <CustomInput
-                  classnames={"w-[242px]"}
+                  classnames={"w-full md:w-[242px]"}
                   label=""
                   size="md"
                   value={searchQuery}
@@ -234,7 +233,7 @@ const Payments: React.FC = () => {
           />
 
           {/* Pagination at page level */}
-          {paginationData.totalPages > 1 &&
+          {/* {paginationData.totalPages > 1 &&
             paginationData.payments.length > 0 && (
               <div className="mt-4">
                 <CustomPagination
@@ -245,7 +244,7 @@ const Payments: React.FC = () => {
                   onPrevious={handlePrevious}
                 />
               </div>
-            )}
+            )} */}
         </>
       ) : (
         <NoPaymentsScreen />

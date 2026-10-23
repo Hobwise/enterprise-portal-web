@@ -1,9 +1,10 @@
 'use client';
 import { getBookingCategories, getBookingDetails } from '@/app/api/controllers/dashboard/bookings';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useGlobalContext } from '../globalProvider';
 import { fetchQueryConfig } from "@/lib/queryConfig";
+import { isOfflineFailure } from '@/lib/offlineQueue';
 
 interface Booking {
   reservationName: string;
@@ -62,11 +63,14 @@ const useBookings = (
         details: detailsItems,
       };
     } catch (error) {
+      // Network-level failure: surface it so a consumer can show a retry /
+      // stale-data notice instead of a silent "No bookings found".
+      if (isOfflineFailure(error)) throw error;
       return { categories: [], details: [] };
     }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<any>({
+  const { data, isLoading, isError, refetch, dataUpdatedAt, isFetching } = useQuery<any>({
     queryKey: [
       "bookings",
       { page, rowsPerPage, tableStatus },
@@ -75,7 +79,8 @@ const useBookings = (
     
       ...fetchQueryConfig(options),
       refetchOnWindowFocus: false,
-      staleTime: 0,
+      staleTime: 30 * 1000, // 30s — reduces refetch churn; status switches still refetch via query keys
+      placeholderData: keepPreviousData, // keep the current rows visible while a refresh runs
       enabled: options?.enabled !== false,
     
   });
@@ -86,6 +91,8 @@ const useBookings = (
     isLoading,
     isError,
     refetch,
+    dataUpdatedAt,
+    isFetching,
   };
 };
 

@@ -61,6 +61,7 @@ import SendEmailModal from "@/components/ui/dashboard/inventory/purchase-request
 import { fetchQueryConfig } from "@/lib/queryConfig";
 import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination";
 import SpinnerLoader from "@/components/ui/dashboard/menu/SpinnerLoader";
+import useMobile from "@/hooks/useMobile";
 
 type Step = "list" | "select" | "initiate";
 
@@ -370,6 +371,7 @@ function ConfirmActionModal({
 
 export default function StockTransferPage() {
   const queryClient = useQueryClient();
+  const isMobile = useMobile();
   const [step, setStep] = useState<Step>("list");
   const [activeTab, setActiveTab] = useState("Stock Transfer");
   const [selectedBusiness, setSelectedBusiness] = useState("");
@@ -991,11 +993,124 @@ export default function StockTransferPage() {
     );
   };
 
+  const renderTransferActions = (item: StockTransfer) => (
+    <div
+      className="relative flex justify-center items-center gap-2"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <Dropdown>
+        <DropdownTrigger>
+          <button
+            type="button"
+            aria-label="actions"
+            className="cursor-pointer flex items-center gap-0.5 text-gray-500 hover:text-black transition-colors px-2 py-1 rounded-md hover:bg-gray-100"
+          >
+            <HiOutlineDotsVertical />
+          </button>
+        </DropdownTrigger>
+        <DropdownMenu
+          className="text-black"
+          onAction={(key) => {
+            if (key === "view") {
+              setSelectedOutgoing(item);
+            } else if (key === "sendEmail") {
+              handleSendMailTransfer(item);
+            } else if (key === "cancel") {
+              setCancelTarget(item);
+            } else if (key === "delete") {
+              setDeleteTarget(item);
+            }
+          }}
+        >
+          <DropdownSection>
+            <DropdownItem key="view">
+              <div className="flex gap-3 items-center">
+                <Eye size={16} />
+                <p>View Details</p>
+              </div>
+            </DropdownItem>
+            <DropdownItem key="sendEmail">
+              <div className="flex gap-3 items-center">
+                <Mail size={16} />
+                <p>Send Email</p>
+              </div>
+            </DropdownItem>
+            <DropdownItem key="cancel">
+              <div className="flex gap-3 items-center">
+                <XCircle size={16} />
+                <p>Cancel</p>
+              </div>
+            </DropdownItem>
+            <DropdownItem
+              key="delete"
+              className="text-danger"
+              color="danger"
+            >
+              <div className="flex gap-3 items-center">
+                <Trash2 size={16} />
+                <p>Delete</p>
+              </div>
+            </DropdownItem>
+          </DropdownSection>
+        </DropdownMenu>
+      </Dropdown>
+    </div>
+  );
+
+  const renderIncomingStatus = (transfer: IncomingTransfer) =>
+    transfer.status === "Confirm" ? (
+      <button
+        type="button"
+        onClick={() => setSelectedIncoming(transfer)}
+        className="bg-[#5F35D2] text-white rounded-xl font-bold flex items-center gap-2 h-10 px-6 text-sm"
+      >
+        Confirm
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      </button>
+    ) : (
+      <div className="flex items-center justify-center gap-2 text-[#16AB60] font-bold">
+        Verified
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M7.75 12.75L10 15L16.25 8.75"
+            stroke="#16AB60"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+            stroke="#16AB60"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+    );
+
   return (
     <div className="w-full min-h-screen max-w-7xl mx-auto">
       {/* Page Header Tabs */}
-      <div className="flex items-center justify-between px-6 pt-4 pb-2">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center justify-between px-4 sm:px-6 pt-4 pb-2 overflow-x-auto scrollbar-hide">
+        <div className="flex items-center gap-1 min-w-max sm:min-w-0 sm:flex-wrap">
           {/* Create tab — triggers the create flow (replaces the old right-side button) */}
           <button
             onClick={() => {
@@ -1046,10 +1161,10 @@ export default function StockTransferPage() {
       </div>
 
       {step === "list" && !selectedIncoming && !selectedOutgoing && (
-        <div className="px-6 py-4">
+        <div className="px-4 sm:px-6 py-4">
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-[#101828]">
+              <h1 className="text-xl sm:text-2xl font-bold text-[#101828]">
                 {activeTab === "Stock Transfer" && "Stock Transfers"}
                 {activeTab === "Incoming" && "Incoming Transfers"}
                 {activeTab === "Activity Log" && "Activity Log"}
@@ -1065,7 +1180,7 @@ export default function StockTransferPage() {
             </div>
           </div>
 
-          <div className="flex gap-4 mb-4">
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
             <div className="relative flex-1">
               <Input
                 placeholder="Search by name or ID"
@@ -1092,119 +1207,161 @@ export default function StockTransferPage() {
           </div>
 
           <div className="relative border border-primaryGrey rounded-lg overflow-visible">
-            {activeTab === "Stock Transfer" && (
-              <Table
-                radius="lg"
-                isCompact
-                removeWrapper
-                classNames={{
-                  th: "text-default-500 text-xs border-b border-divider py-4 rounded-none bg-grey300",
-                  tr: "border-b border-divider rounded-none",
-                  td: "py-3 text-textGrey group-data-[first=true]:first:before:rounded-none group-data-[first=true]:last:before:rounded-none group-data-[middle=true]:before:rounded-none group-data-[last=true]:first:before:rounded-none group-data-[last=true]:last:before:rounded-none",
-                }}
-              >
-                <TableHeader>
-                  <TableColumn>ISSUE DATE</TableColumn>
-                  <TableColumn>TRANSFER ID</TableColumn>
-                  <TableColumn>DESTINATION</TableColumn>
-                  <TableColumn>STATUS</TableColumn>
-                  <TableColumn>ITEMS</TableColumn>
-                  <TableColumn align="center">ACTIONS</TableColumn>
-                </TableHeader>
-                <TableBody
-                  emptyContent="No stock transfers found"
-                  items={transfersLoading ? [] : filteredTransfers}
-                  isLoading={transfersLoading}
-                  loadingContent={<SpinnerLoader size="md" />}
-                >
-                  {(item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <span className="text-sm text-gray-500">{item.issueDate}</span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm font-medium text-gray-900">{item.transferId}</span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm font-medium text-gray-900">
-                          {item.destinationBusinessName}
-                        </span>
-                      </TableCell>
-                      <TableCell>{renderStatus(item.status)}</TableCell>
-                      <TableCell>
-                        <span className="text-sm text-gray-500">{item.itemCount}</span>
-                      </TableCell>
-                      <TableCell>
-                        <div
-                          className="relative flex justify-center items-center gap-2"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Dropdown>
-                            <DropdownTrigger>
-                              <button
-                                type="button"
-                                aria-label="actions"
-                                className="cursor-pointer flex items-center gap-0.5 text-gray-500 hover:text-black transition-colors px-2 py-1 rounded-md hover:bg-gray-100"
-                              >
-                                <HiOutlineDotsVertical />
-                              </button>
-                            </DropdownTrigger>
-                            <DropdownMenu
-                              className="text-black"
-                              onAction={(key) => {
-                                if (key === "view") {
-                                  setSelectedOutgoing(item);
-                                } else if (key === "sendEmail") {
-                                  handleSendMailTransfer(item);
-                                } else if (key === "cancel") {
-                                  setCancelTarget(item);
-                                } else if (key === "delete") {
-                                  setDeleteTarget(item);
-                                }
-                              }}
-                            >
-                              <DropdownSection>
-                                <DropdownItem key="view">
-                                  <div className="flex gap-3 items-center">
-                                    <Eye size={16} />
-                                    <p>View Details</p>
-                                  </div>
-                                </DropdownItem>
-                                <DropdownItem key="sendEmail">
-                                  <div className="flex gap-3 items-center">
-                                    <Mail size={16} />
-                                    <p>Send Email</p>
-                                  </div>
-                                </DropdownItem>
-                                <DropdownItem key="cancel">
-                                  <div className="flex gap-3 items-center">
-                                    <XCircle size={16} />
-                                    <p>Cancel</p>
-                                  </div>
-                                </DropdownItem>
-                                <DropdownItem
-                                  key="delete"
-                                  className="text-danger"
-                                  color="danger"
-                                >
-                                  <div className="flex gap-3 items-center">
-                                    <Trash2 size={16} />
-                                    <p>Delete</p>
-                                  </div>
-                                </DropdownItem>
-                              </DropdownSection>
-                            </DropdownMenu>
-                          </Dropdown>
+            {activeTab === "Stock Transfer" &&
+              (isMobile ? (
+                <div className="divide-y divide-primaryGrey">
+                  {transfersLoading ? (
+                    <div className="flex justify-center items-center py-16">
+                      <Loader2 className="w-6 h-6 animate-spin text-[#5F35D2]" />
+                    </div>
+                  ) : filteredTransfers.length === 0 ? (
+                    <div className="flex justify-center items-center py-16 text-sm text-textGrey">
+                      No stock transfers found
+                    </div>
+                  ) : (
+                    filteredTransfers.map((item) => (
+                      <article
+                        key={item.id}
+                        className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                        onClick={() => setSelectedOutgoing(item)}
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-3">
+                          <div>
+                            <div className="text-[15px] font-semibold text-black truncate">
+                              {item.destinationBusinessName}
+                            </div>
+                            <div className="text-textGrey text-[12px] mt-0.5">
+                              {item.transferId}
+                            </div>
+                          </div>
+                          {renderStatus(item.status)}
                         </div>
-                      </TableCell>
-                    </TableRow>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <div className="text-[11px] text-textGrey uppercase mb-1">
+                              Issue Date
+                            </div>
+                            <div className="text-[13px] text-black font-medium">
+                              {item.issueDate}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] text-textGrey uppercase mb-1">
+                              Items
+                            </div>
+                            <div className="text-[13px] text-black font-medium">
+                              {item.itemCount}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex justify-end mt-3">
+                          {renderTransferActions(item)}
+                        </div>
+                      </article>
+                    ))
                   )}
-                </TableBody>
-              </Table>
-            )}
+                </div>
+              ) : (
+                <Table
+                  radius="lg"
+                  isCompact
+                  removeWrapper
+                  classNames={{
+                    th: "text-default-500 text-xs border-b border-divider py-4 rounded-none bg-grey300",
+                    tr: "border-b border-divider rounded-none",
+                    td: "py-3 text-textGrey group-data-[first=true]:first:before:rounded-none group-data-[first=true]:last:before:rounded-none group-data-[middle=true]:before:rounded-none group-data-[last=true]:first:before:rounded-none group-data-[last=true]:last:before:rounded-none",
+                  }}
+                >
+                  <TableHeader>
+                    <TableColumn>ISSUE DATE</TableColumn>
+                    <TableColumn>TRANSFER ID</TableColumn>
+                    <TableColumn>DESTINATION</TableColumn>
+                    <TableColumn>STATUS</TableColumn>
+                    <TableColumn>ITEMS</TableColumn>
+                    <TableColumn align="center">ACTIONS</TableColumn>
+                  </TableHeader>
+                  <TableBody
+                    emptyContent="No stock transfers found"
+                    items={transfersLoading ? [] : filteredTransfers}
+                    isLoading={transfersLoading}
+                    loadingContent={<SpinnerLoader size="md" />}
+                  >
+                    {(item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <span className="text-sm text-gray-500">{item.issueDate}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm font-medium text-gray-900">{item.transferId}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm font-medium text-gray-900">
+                            {item.destinationBusinessName}
+                          </span>
+                        </TableCell>
+                        <TableCell>{renderStatus(item.status)}</TableCell>
+                        <TableCell>
+                          <span className="text-sm text-gray-500">{item.itemCount}</span>
+                        </TableCell>
+                        <TableCell>{renderTransferActions(item)}</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              ))}
 
-            {activeTab === "Incoming" && (
-              <Table
+            {activeTab === "Incoming" &&
+              (isMobile ? (
+                <div className="divide-y divide-primaryGrey">
+                  {incomingLoading ? (
+                    <div className="flex justify-center items-center py-16">
+                      <Loader2 className="w-6 h-6 animate-spin text-[#5F35D2]" />
+                    </div>
+                  ) : filteredIncoming.length === 0 ? (
+                    <div className="flex justify-center items-center py-16 text-sm text-textGrey">
+                      No incoming transfers found
+                    </div>
+                  ) : (
+                    filteredIncoming.map((transfer) => (
+                      <article
+                        key={transfer.id}
+                        className="p-4 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-3">
+                          <div>
+                            <div className="text-[15px] font-semibold text-black truncate">
+                              {transfer.receivedFrom}
+                            </div>
+                            <div className="text-textGrey text-[12px] mt-0.5">
+                              {transfer.transferId}
+                            </div>
+                          </div>
+                          {renderIncomingStatus(transfer)}
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <div className="text-[11px] text-textGrey uppercase mb-1">
+                              Issue Date
+                            </div>
+                            <div className="text-[13px] text-black font-medium">
+                              {transfer.issueDate}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] text-textGrey uppercase mb-1">
+                              Items
+                            </div>
+                            <div className="text-[13px] text-black font-medium">
+                              {transfer.itemCount}
+                            </div>
+                          </div>
+                        </div>
+                      </article>
+                    ))
+                  )}
+                </div>
+              ) : (
+                <Table
                 aria-label="Incoming Transfers List"
                 radius="lg"
                 isCompact
@@ -1243,64 +1400,16 @@ export default function StockTransferPage() {
                         <span className="text-sm text-gray-500">{transfer.itemCount}</span>
                       </TableCell>
                       <TableCell>
-                        {transfer.status === "Confirm" ? (
-                          <Button
-                            size="sm"
-                            onClick={() => setSelectedIncoming(transfer)}
-                            className="bg-[#5F35D2] text-white rounded-xl font-bold flex items-center gap-2 h-10 px-6"
-                            endContent={
-                              <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="3"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                            }
-                          >
-                            Confirm
-                          </Button>
-                        ) : (
-                          <div className="flex items-center justify-center gap-2 text-[#16AB60] font-bold">
-                            Verified
-                            <svg
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M7.75 12.75L10 15L16.25 8.75"
-                                stroke="#16AB60"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                              <path
-                                d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-                                stroke="#16AB60"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </div>
-                        )}
+                        {renderIncomingStatus(transfer)}
                       </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
               </Table>
-            )}
+              ))}
 
             {activeTab === "Activity Log" && (
-              <div className="flex flex-col gap-6 p-8 min-h-[400px]">
+              <div className="flex flex-col gap-6 p-4 sm:p-8 min-h-[400px]">
                 {activityItems.length > 0 ? (
                   activityItems.map((activity) => (
                     <div
@@ -1856,7 +1965,7 @@ export default function StockTransferPage() {
           </div>
 
           <div className="flex flex-col lg:flex-row gap-8 items-start">
-            <div className="flex-1 bg-white border border-[#E4E7EC] rounded-2xl shadow-sm overflow-hidden w-full relative">
+            <div className="flex-1 bg-white border border-[#E4E7EC] rounded-2xl shadow-sm overflow-x-auto w-full relative">
               {outgoingDetailsLoading ? (
                 <div className="flex items-center justify-center py-16">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5F35D2]" />
@@ -1866,6 +1975,7 @@ export default function StockTransferPage() {
                 aria-label="View Transfer List"
                 removeWrapper
                 classNames={{
+                  base: "min-w-[720px]",
                   th: "bg-[#F9FAFB] text-[#667085] font-bold text-[10px] py-4 px-6 uppercase tracking-wider",
                   td: "py-4 px-6 text-sm text-[#344054] border-b border-[#F2F4F7] font-bold relative",
                 }}
@@ -2111,17 +2221,18 @@ export default function StockTransferPage() {
           </div>
 
           <div className="flex flex-col lg:flex-row gap-8 items-start">
-            <div className="flex-1 bg-white border border-[#E4E7EC] rounded-2xl shadow-sm overflow-hidden w-full">
+            <div className="flex-1 bg-white border border-[#E4E7EC] rounded-2xl shadow-sm overflow-x-auto w-full">
               {incomingDetailsLoading ? (
                 <div className="flex items-center justify-center py-16">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5F35D2]" />
                 </div>
               ) : (
-              <div className="max-h-[60vh] overflow-y-auto">
+              <div className="max-h-[60vh] overflow-y-auto overflow-x-auto">
               <Table
                 aria-label="View Transfer List"
                 removeWrapper
                 classNames={{
+                  base: "min-w-[560px]",
                   th: "bg-[#F9FAFB] text-[#667085] font-bold text-[10px] py-4 px-6 uppercase tracking-wider sticky top-0 z-10",
                   td: "py-4 px-6 text-sm text-[#344054] border-b border-[#F2F4F7] font-bold relative",
                 }}

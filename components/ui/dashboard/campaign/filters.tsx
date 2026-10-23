@@ -5,11 +5,12 @@ const Filters = ({ campaigns, handleTabChange, handleTabClick }: any) => {
   
   return (
     <>
-      <div className='flex  relative w-full top-4 px-3  border-b border-primaryGrey justify-between'>
+      <div className='flex relative w-full px-3 border-b border-primaryGrey justify-between'>
         <Tabs
           classNames={{
+            base: 'max-w-full overflow-x-auto scrollbar-hide',
             tabList:
-              'gap-4  relative rounded-none p-0 w-[100%] text-[#344054] overflow-scroll',
+              'gap-4 relative rounded-none p-0 text-[#344054]',
             cursor: 'w-full bg-primaryColor h-[1px]',
             tab: 'max-w-fit px-0 py-0 h-10 px-4',
             tabContent:

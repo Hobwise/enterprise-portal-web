@@ -27,6 +27,7 @@ import {
 import { PurchaseRequest, PurchaseRequestStatus } from "./types";
 import { historyColumns } from "./data";
 import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination";
+import useMobile from "@/hooks/useMobile";
 
 interface PurchaseRequestHistoryTableProps {
   data: PurchaseRequest[];
@@ -68,6 +69,7 @@ const PurchaseRequestHistoryTable: React.FC<
   isActionLoading,
 }) => {
   const [filterValue, setFilterValue] = useState("");
+  const isMobile = useMobile();
 
   const filteredData = useMemo(() => {
     if (!data) return [];
@@ -158,61 +160,7 @@ const PurchaseRequestHistoryTable: React.FC<
                 </button>
               </DropdownTrigger>
               <DropdownMenu className="text-black">
-                <DropdownSection>
-                  {[
-                    <DropdownItem
-                      key="view"
-                      onClick={() => onViewRequest?.(item)}
-                    >
-                      <div className="flex gap-3 items-center">
-                        <LuEye size={16} />
-                        <p>View PO</p>
-                      </div>
-                    </DropdownItem>,
-                    <DropdownItem
-                      key="duplicate"
-                      onClick={() => onDuplicateRequest(item)}
-                    >
-                      <div className="flex gap-3 items-center">
-                        <LuCopy size={16} />
-                        <p>Duplicate PO</p>
-                      </div>
-                    </DropdownItem>,
-                    ...(isPending
-                      ? [
-                          <DropdownItem
-                            key="receive"
-                            onClick={() => onReceiveRequest(item)}
-                          >
-                            <div className="flex gap-3 items-center">
-                              <LuPackageCheck size={16} />
-                              <p>Receive PO</p>
-                            </div>
-                          </DropdownItem>,
-                          <DropdownItem
-                            key="sendmail"
-                            onClick={() => onSendMail(item)}
-                          >
-                            <div className="flex gap-3 items-center">
-                              <LuMail size={16} />
-                              <p>Send Mail to Supplier</p>
-                            </div>
-                          </DropdownItem>,
-                          <DropdownItem
-                            key="cancel"
-                            className="text-danger"
-                            color="danger"
-                            onClick={() => onCancelRequest(item)}
-                          >
-                            <div className="flex gap-3 items-center">
-                              <XCircle size={16} />
-                              <p>Cancel</p>
-                            </div>
-                          </DropdownItem>,
-                        ]
-                      : []),
-                  ]}
-                </DropdownSection>
+                <DropdownSection>{renderActions(item)}</DropdownSection>
               </DropdownMenu>
             </Dropdown>
           </div>
@@ -220,6 +168,51 @@ const PurchaseRequestHistoryTable: React.FC<
       default:
         return null;
     }
+  };
+
+  const renderActions = (item: PurchaseRequest) => {
+    const isPending = item.status === "Pending";
+    return [
+      <DropdownItem key="view" onClick={() => onViewRequest?.(item)}>
+        <div className="flex gap-3 items-center">
+          <LuEye size={16} />
+          <p>View PO</p>
+        </div>
+      </DropdownItem>,
+      <DropdownItem key="duplicate" onClick={() => onDuplicateRequest(item)}>
+        <div className="flex gap-3 items-center">
+          <LuCopy size={16} />
+          <p>Duplicate PO</p>
+        </div>
+      </DropdownItem>,
+      ...(isPending
+        ? [
+            <DropdownItem key="receive" onClick={() => onReceiveRequest(item)}>
+              <div className="flex gap-3 items-center">
+                <LuPackageCheck size={16} />
+                <p>Receive PO</p>
+              </div>
+            </DropdownItem>,
+            <DropdownItem key="sendmail" onClick={() => onSendMail(item)}>
+              <div className="flex gap-3 items-center">
+                <LuMail size={16} />
+                <p>Send Mail to Supplier</p>
+              </div>
+            </DropdownItem>,
+            <DropdownItem
+              key="cancel"
+              className="text-danger"
+              color="danger"
+              onClick={() => onCancelRequest(item)}
+            >
+              <div className="flex gap-3 items-center">
+                <XCircle size={16} />
+                <p>Cancel</p>
+              </div>
+            </DropdownItem>,
+          ]
+        : []),
+    ];
   };
 
   return (
@@ -235,7 +228,7 @@ const PurchaseRequestHistoryTable: React.FC<
             placeholder="Search orders..."
             value={filterValue}
             onChange={(e) => setFilterValue(e.target.value)}
-            className="border border-gray-200 rounded-lg pl-9 pr-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] w-64"
+            className="border border-gray-200 rounded-lg pl-9 pr-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] w-64 max-w-full"
           />
         </div>
       </div>
@@ -246,8 +239,87 @@ const PurchaseRequestHistoryTable: React.FC<
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#5F35D2]" />
           </div>
         )}
-        <div className="max-h-[382px] overflow-auto">
-          <Table
+        {isMobile ? (
+          <div className="divide-y divide-primaryGrey">
+            {filteredData.length === 0 && (
+              <div className="flex justify-center items-center py-16 text-sm text-textGrey">
+                No purchase orders yet
+              </div>
+            )}
+            {filteredData.map((item) => (
+              <article
+                key={item.purchaseOrderId || item.requestId}
+                className="p-4 hover:bg-gray-50 transition-colors"
+                onClick={() => onViewRequest?.(item)}
+              >
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <div>
+                    <div className="text-[15px] font-semibold text-black truncate">
+                      {item.supplierName || item.companyName || "Supplier"}
+                    </div>
+                    <div className="text-textGrey text-[12px] mt-0.5">
+                      {item.reference || item.requestId}
+                    </div>
+                  </div>
+                  {renderCell(item, "status")}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <div className="text-[11px] text-textGrey uppercase mb-1">
+                      Request Date
+                    </div>
+                    <div className="text-[13px] text-black font-medium">
+                      {item.requestDate}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-textGrey uppercase mb-1">
+                      Expected Delivery
+                    </div>
+                    <div className="text-[13px] text-black font-medium">
+                      {item.expectedDeliveryDate || "\u2014"}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-textGrey uppercase mb-1">
+                      Items
+                    </div>
+                    <div className="text-[13px] text-black font-medium">
+                      {item.numberOfItems}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-textGrey uppercase mb-1">
+                      Total Cost
+                    </div>
+                    <div className="text-[13px] text-black font-semibold">
+                      {formatCurrency(item.totalCost)}
+                    </div>
+                  </div>
+                </div>
+
+                {item.status === "Pending" && (
+                  <div className="flex justify-end mt-3">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onReceiveRequest(item);
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5F35D2] text-white text-sm font-medium"
+                    >
+                      <LuPackageCheck size={16} />
+                      Receive PO
+                    </button>
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="max-h-[382px] overflow-auto">
+            <Table
             radius="lg"
             isCompact
             removeWrapper
@@ -298,6 +370,7 @@ const PurchaseRequestHistoryTable: React.FC<
             </TableBody>
           </Table>
         </div>
+        )}
         <div className="flex w-full justify-center">
           <CustomPagination
             currentPage={currentPage}

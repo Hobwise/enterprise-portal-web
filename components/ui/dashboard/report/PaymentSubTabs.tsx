@@ -2,12 +2,17 @@
 
 import React, { useMemo, useState } from 'react';
 import moment from 'moment';
-import { Button, Skeleton } from '@nextui-org/react';
-import { FiDownload } from 'react-icons/fi';
+import { Skeleton } from '@nextui-org/react';
 import { formatPrice } from '@/lib/utils';
-import { SortableTH, StatCards, useTableSort } from './SharedPanels';
+import {
+  reportTableClass,
+  SortableTH,
+  StatCards,
+  useTableSort,
+} from './SharedPanels';
 import { TablePagination } from './SalesPanels';
-import { ExportType } from './exportHelpers';
+import { ExportType, ExportTypeValue } from './exportHelpers';
+import ExportButtons from './ExportButtons';
 import {
   NetRevenueItem,
   OutstandingReceivableItem,
@@ -44,40 +49,9 @@ interface PaymentSubTabPanelProps {
   data?: PaymentReportResponse;
   isLoading?: boolean;
   onExport?: (exportType: number) => void | Promise<void>;
-  isExporting?: boolean;
+  exportingType?: ExportTypeValue | null;
 }
 
-interface ExportButtonsProps {
-  onExportExcel?: () => void;
-  onExportPdf?: () => void;
-  isLoading?: boolean;
-}
-
-const ExportButtons: React.FC<ExportButtonsProps> = ({
-  onExportExcel,
-  onExportPdf,
-  isLoading,
-}) => (
-  <div className="flex gap-2">
-    <Button
-      variant="bordered"
-      onPress={onExportExcel}
-      isLoading={isLoading}
-      startContent={isLoading ? null : <FiDownload size={14} />}
-      className="border border-gray-200 text-gray-700 bg-white rounded-lg text-xs h-9"
-    >
-      Export Excel
-    </Button>
-    <Button
-      onPress={onExportPdf}
-      isLoading={isLoading}
-      startContent={isLoading ? null : <FiDownload size={14} />}
-      className="bg-primaryColor text-white rounded-lg text-xs h-9"
-    >
-      Export PDF
-    </Button>
-  </div>
-);
 
 const buildExportHandlers = (
   onExport?: (exportType: number) => void | Promise<void>
@@ -116,7 +90,7 @@ export const PaymentSummarySubPanel: React.FC<PaymentSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [statusTab, setStatusTab] = useState<string>('all');
   const [page, setPage] = useState(1);
@@ -240,7 +214,7 @@ export const PaymentSummarySubPanel: React.FC<PaymentSubTabPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               Payment Summary
@@ -260,10 +234,10 @@ export const PaymentSummarySubPanel: React.FC<PaymentSubTabPanelProps> = ({
               ))}
             </select>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(10)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -354,39 +328,39 @@ export const PaymentSummarySubPanel: React.FC<PaymentSubTabPanelProps> = ({
                     key={`${p.orderId}-${idx}`}
                     className="hover:bg-gray-50"
                   >
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {moment(p.dateCreated).format('MMM DD, hh:mma')}
                     </td>
-                    <td className="px-5 py-4 text-gray-700 font-mono text-xs">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700 font-mono text-xs">
                       {p.orderId}
                     </td>
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {p.customer || 'anonymous'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {p.quickResponseName || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {p.paymentMethod}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {p.paymentType || '—'}
                     </td>
                     <td
-                      className={`px-5 py-4 font-medium ${directionColor(
+                      className={`px-3 sm:px-5 py-4 font-medium ${directionColor(
                         p.paymentDirection
                       )}`}
                     >
                       {p.paymentDirection || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-900 font-semibold">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-semibold">
                       {p.totalAmount}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {p.confirmedBy || '—'}
                     </td>
                     <td
-                      className={`px-5 py-4 font-medium ${statusColor(
+                      className={`px-3 sm:px-5 py-4 font-medium ${statusColor(
                         p.status
                       )}`}
                     >
@@ -414,7 +388,7 @@ export const PaymentMethodsSubPanel: React.FC<PaymentSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const exportHandlers = buildExportHandlers(onExport);
   const [page, setPage] = useState(1);
@@ -516,14 +490,14 @@ export const PaymentMethodsSubPanel: React.FC<PaymentSubTabPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <h3 className="text-base font-semibold text-gray-900">
             All Payment Method Summaries
           </h3>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(6)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -586,20 +560,20 @@ export const PaymentMethodsSubPanel: React.FC<PaymentSubTabPanelProps> = ({
                     key={`${m.paymentMethod}-${index}`}
                     className="hover:bg-gray-50"
                   >
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {m.paymentMethod}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {safeNumber(m.numberOfPayments).toLocaleString()}
                     </td>
-                    <td className="px-5 py-4 text-emerald-600">
+                    <td className="px-3 sm:px-5 py-4 text-emerald-600">
                       {m.totalCredits}
                     </td>
-                    <td className="px-5 py-4 text-red-500">{m.totalDebits}</td>
-                    <td className="px-5 py-4 text-gray-900 font-semibold">
+                    <td className="px-3 sm:px-5 py-4 text-red-500">{m.totalDebits}</td>
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-semibold">
                       {m.netAmountProcessed}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {m.lastRecordDateTime
                         ? moment(m.lastRecordDateTime).format('MMM DD, YYYY')
                         : '—'}
@@ -626,7 +600,7 @@ export const QrRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const exportHandlers = buildExportHandlers(onExport);
   const [page, setPage] = useState(1);
@@ -739,14 +713,14 @@ export const QrRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <h3 className="text-base font-semibold text-gray-900">
             Revenue by Quick Response
           </h3>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(8)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -823,28 +797,28 @@ export const QrRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
                     key={`${q.quickResponseName}-${index}`}
                     className="hover:bg-gray-50"
                   >
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {q.quickResponseName}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {safeNumber(q.numberOfOrders).toLocaleString()}
                     </td>
-                    <td className="px-5 py-4 text-amber-500">
+                    <td className="px-3 sm:px-5 py-4 text-amber-500">
                       {q.pendingSalesAmount}
                     </td>
-                    <td className="px-5 py-4 text-emerald-600">
+                    <td className="px-3 sm:px-5 py-4 text-emerald-600">
                       {q.confirmedSalesAmount}
                     </td>
-                    <td className="px-5 py-4 text-gray-900 font-semibold">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-semibold">
                       {q.totalSalesAmount}
                     </td>
-                    <td className="px-5 py-4 text-red-500">
+                    <td className="px-3 sm:px-5 py-4 text-red-500">
                       {q.totalRefundAmount}
                     </td>
-                    <td className="px-5 py-4 text-primaryColor font-semibold">
+                    <td className="px-3 sm:px-5 py-4 text-primaryColor font-semibold">
                       {q.grossSalesAmount}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {q.dateUpdated
                         ? moment(q.dateUpdated).format('MMM DD, YYYY')
                         : '—'}
@@ -871,7 +845,7 @@ export const NetRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const exportHandlers = buildExportHandlers(onExport);
   const [page, setPage] = useState(1);
@@ -992,7 +966,7 @@ export const NetRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               Net Revenue by Period
@@ -1015,10 +989,10 @@ export const NetRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
               <option value="zero">Zero ({totals.zeroCount})</option>
             </select>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(4)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -1067,16 +1041,16 @@ export const NetRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
                     key={`${r.period}-${index}`}
                     className="hover:bg-gray-50"
                   >
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {moment(r.period).format('MMM DD, YYYY')}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {moment(r.period).format('dddd')}
                     </td>
-                    <td className={`px-5 py-4 ${netRevenueClass(r.netRevenue)}`}>
+                    <td className={`px-3 sm:px-5 py-4 ${netRevenueClass(r.netRevenue)}`}>
                       {r.netRevenue}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {r.lastRecordDate
                         ? moment(r.lastRecordDate).format('MMM DD, YYYY')
                         : '—'}
@@ -1101,7 +1075,7 @@ export const NetRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
 
 export const OutstandingReceivablesSubPanel: React.FC<
   PaymentSubTabPanelProps
-> = ({ data, isLoading, onExport, isExporting }) => {
+> = ({ data, isLoading, onExport, exportingType }) => {
   const [page, setPage] = useState(1);
   const [agingFilter, setAgingFilter] = useState<string>('all');
   const today = moment();
@@ -1243,7 +1217,7 @@ export const OutstandingReceivablesSubPanel: React.FC<
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               All Outstanding Receivables
@@ -1264,10 +1238,10 @@ export const OutstandingReceivablesSubPanel: React.FC<
               <option value="aged">Over 30 days ({agingCounts.aged})</option>
             </select>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(8)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -1341,29 +1315,29 @@ export const OutstandingReceivablesSubPanel: React.FC<
               ) : (
                 pageRows.map((r) => (
                   <tr key={r.orderId} className="hover:bg-gray-50">
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {r.orderDate
                         ? moment(r.orderDate).format('MMM DD, YYYY')
                         : '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700 font-mono text-xs">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700 font-mono text-xs">
                       {r.orderId}
                     </td>
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {r.customer}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {r.treatedBy || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">{r.orderTotal}</td>
-                    <td className="px-5 py-4 text-emerald-600">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">{r.orderTotal}</td>
+                    <td className="px-3 sm:px-5 py-4 text-emerald-600">
                       {r.paidSoFar}
                     </td>
-                    <td className="px-5 py-4 text-red-500 font-semibold">
+                    <td className="px-3 sm:px-5 py-4 text-red-500 font-semibold">
                       {r.outstanding}
                     </td>
                     <td
-                      className={`px-5 py-4 font-medium ${
+                      className={`px-3 sm:px-5 py-4 font-medium ${
                         r.daysOutstanding > 30
                           ? 'text-red-500'
                           : r.daysOutstanding > 7

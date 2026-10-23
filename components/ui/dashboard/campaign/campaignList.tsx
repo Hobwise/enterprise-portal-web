@@ -20,6 +20,7 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
+  Chip,
 } from "@nextui-org/react";
 import moment from "moment";
 import Image from "next/image";
@@ -39,6 +40,7 @@ import RepeatCampaignModal from "./repeatCampaign";
 import useCampaignCategory from "@/hooks/cachedEndpoints/useCampaignCategory";
 import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 import CreateCampaign from "./createCampaign";
+import SpinnerLoader from "@/components/ui/dashboard/menu/SpinnerLoader";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "campaignName",
@@ -92,14 +94,20 @@ const CampaignList = ({ searchQuery }: any) => {
   const rawCategoryData = getCategoryDetails(tableStatus || 'All Campaigns');
   
   
-  // Extract the campaigns array for usePagination (similar to how Orders page does it)
-  // Ensure we ALWAYS have an array, even if rawCategoryData is null/undefined
-  const campaignsForPagination = (rawCategoryData && Array.isArray(rawCategoryData.data)) 
-    ? rawCategoryData.data 
-    : [];
-
-  // Ensure we always pass an array to usePagination
-  const paginationData = Array.isArray(campaignsForPagination) ? campaignsForPagination : [];
+  // Create pagination data structure for usePagination hook (matching Orders page)
+  // Note: API returns all campaigns (pageSize 100), so we use client-side pagination via usePagination
+  const paginationData = React.useMemo(() => {
+    if (rawCategoryData && typeof rawCategoryData === 'object') {
+      return {
+        data: rawCategoryData.data || [],
+        totalCount: rawCategoryData.totalCount || 0,
+      };
+    }
+    return {
+      data: [],
+      totalCount: 0,
+    };
+  }, [rawCategoryData]);
   
   const {
     bottomContent,
@@ -291,6 +299,118 @@ const CampaignList = ({ searchQuery }: any) => {
     );
   }, [categories, tableStatus]);
 
+  const renderMobileCard = React.useCallback(
+    (campaign: Campaign) => (
+      <article
+        key={campaign.id}
+        className="p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors"
+        onClick={() => {
+          saveJsonItemToLocalStorage("campaign", campaign);
+          router.push(`/dashboard/campaigns/${campaign.id}`);
+        }}
+      >
+        <div className="flex items-end justify-end mb-3 mt-2">
+          <div className="ml-2" onClick={(e) => e.stopPropagation()}>
+            <Dropdown aria-label="campaign actions" className="">
+              <DropdownTrigger aria-label="actions">
+                <div className="cursor-pointer flex justify-center items-center text-black p-2 -m-2">
+                  <HiOutlineDotsVertical className="text-[20px]" />
+                </div>
+              </DropdownTrigger>
+              <DropdownMenu className="text-black">
+                <DropdownSection>
+                  <DropdownItem
+                    key="preview"
+                    onClick={() => {
+                      saveJsonItemToLocalStorage("campaign", campaign);
+                      router.push(`/dashboard/campaigns/${campaign.id}`);
+                    }}
+                    aria-label="Preview campaign"
+                  >
+                    <div className="flex gap-3 items-center text-grey500">
+                      <LuEye />
+                      <p>Preview campaign</p>
+                    </div>
+                  </DropdownItem>
+                  {isItemInCompletedArray(campaign, allCampaigns) ? (
+                    <DropdownItem
+                      key="repeat"
+                      onClick={() => toggleRepeatModal(campaign)}
+                      aria-label="Repeat campaign"
+                    >
+                      <div className="flex gap-3 items-center text-grey500">
+                        <PiRepeat />
+                        <p>Repeat campaign</p>
+                      </div>
+                    </DropdownItem>
+                  ) : null}
+                  {(role === 0 ||
+                    userRolePermissions?.canEditCampaign === true) && (
+                    <DropdownItem
+                      key="edit"
+                      onClick={() => {
+                        saveJsonItemToLocalStorage("campaign", campaign);
+                        router.push("/dashboard/campaigns/edit-campaign");
+                      }}
+                      aria-label="Edit campaign"
+                    >
+                      <div className="flex gap-3 items-center text-grey500">
+                        <FaRegEdit />
+                        <p>Edit campaign</p>
+                      </div>
+                    </DropdownItem>
+                  )}
+                  {(role === 0 ||
+                    userRolePermissions?.canDeleteCampaign === true) && (
+                    <DropdownItem
+                      key="delete"
+                      onClick={() => {
+                        toggleCampaignModal();
+                        saveJsonItemToLocalStorage("campaign", campaign);
+                      }}
+                      aria-label="Delete campaign"
+                    >
+                      <div className="text-danger-500 flex items-center gap-3">
+                        <RiDeleteBin6Line />
+                        <p>Delete campaign</p>
+                      </div>
+                    </DropdownItem>
+                  )}
+                </DropdownSection>
+              </DropdownMenu>
+            </Dropdown>
+          </div>
+        </div>
+
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-semibold text-black text-[15px]">
+              {campaign.campaignName}
+            </span>
+          </div>
+          <div className="text-textGrey text-[13px] line-clamp-2">
+            {campaign.campaignDescription}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between mt-3">
+          <div className="text-textGrey text-[12px]">
+            {moment(campaign.startDateTime).format("MMM DD, YYYY h:mm A")}
+          </div>
+          <Chip
+            className="capitalize"
+            color={campaign.isActive ? "success" : "secondary"}
+            size="sm"
+            variant="bordered"
+          >
+            {campaign.isActive ? "Active" : "Inactive"}
+          </Chip>
+        </div>
+      </article>
+    ),
+    [role, userRolePermissions, router, allCampaigns]
+  );
+
   // Use displayData which contains accumulated data on mobile, current page on desktop
   let campaignsToDisplay = displayData && Array.isArray(displayData) ? displayData : [];
 
@@ -320,7 +440,7 @@ const CampaignList = ({ searchQuery }: any) => {
     );
   }
   
-  // Show empty state if no campaigns and not loading
+// Show empty state if no campaigns and not loading
   if (!isLoadingInitial && allCampaigns.length === 0 && categories.length === 0) {
     return <CreateCampaign />;
   }
@@ -328,53 +448,83 @@ const CampaignList = ({ searchQuery }: any) => {
 
   return (
     <section className="border border-primaryGrey rounded-lg overflow-hidden">
-      <Table
-        radius="lg"
-        isCompact
-        removeWrapper
-        aria-label="list of campaign"
-        bottomContent={bottomContent}
-        bottomContentPlacement="outside"
-        classNames={classNames}
-        topContent={topContent}
-        sortDescriptor={sortDescriptor as any}
-        topContentPlacement="outside"
-        onSortChange={setSortDescriptor as any}
-      >
-        <TableHeader columns={headerColumns}>
-          {(column) => (
-            <TableColumn
-              key={column.uid}
-              align={column.uid === "actions" ? "center" : "start"}
-            >
-              {column.name}
-            </TableColumn>
+      {/* Filters - shown on both mobile and desktop */}
+      {topContent}
+
+      {/* Mobile Card Layout */}
+      {isMobile ? (
+        <div className="divide-y divide-primaryGrey">
+          {/* Loading state */}
+          {isLoadingCurrent && (
+            <div className="flex justify-center items-center py-16">
+              <SpinnerLoader size="md" />
+            </div>
           )}
-        </TableHeader>
-        <TableBody
-          emptyContent={
-            isLoadingInitial ? (
-              <CustomLoading />
-            ) : (
-              searchQuery ? "No campaigns match your search" : "No campaign found"
-            )
-          }
-          items={campaignsToDisplay || []}
+
+          {/* Empty state */}
+          {!isLoadingCurrent && campaignsToDisplay.length === 0 && (
+            <div className="flex justify-center items-center py-16 text-textGrey">
+              {searchQuery ? "No campaigns match your search" : "No campaign found"}
+            </div>
+          )}
+
+          {/* Campaign Cards */}
+          {!isLoadingCurrent &&
+            campaignsToDisplay.map((campaign: Campaign) =>
+              renderMobileCard(campaign)
+            )}
+
+          {/* Infinite Scroll Sentinel & Loading Indicator from usePagination */}
+          {bottomContent}
+        </div>
+      ) : (
+        /* Desktop Table Layout */
+        <Table
+          radius="lg"
+          isCompact
+          removeWrapper
+          aria-label="list of campaign"
+          bottomContent={bottomContent}
+          bottomContentPlacement="outside"
+          classNames={classNames}
+          topContent={null}
+          sortDescriptor={sortDescriptor as any}
+          topContentPlacement="outside"
+          onSortChange={setSortDescriptor as any}
         >
-          {(item: Campaign) => (
-            <TableRow
-              key={item.id || JSON.stringify(item)}
-              className="cursor-pointer hover:bg-gray-50 transition-colors"
-            >
-              {(columnKey) => (
-                <TableCell>{renderCell(item, columnKey as string)}</TableCell>
-              )}
-            </TableRow>
-          )}
-
-
-        </TableBody>
-      </Table>
+          <TableHeader columns={headerColumns}>
+            {(column) => (
+              <TableColumn
+                key={column.uid}
+                align={column.uid === "actions" ? "center" : "start"}
+              >
+                {column.name}
+              </TableColumn>
+            )}
+          </TableHeader>
+          <TableBody
+            emptyContent={
+              isLoadingInitial ? (
+                <CustomLoading />
+              ) : (
+                searchQuery ? "No campaigns match your search" : "No campaign found"
+              )
+            }
+            items={campaignsToDisplay || []}
+          >
+            {(item: Campaign) => (
+              <TableRow
+                key={item.id || JSON.stringify(item)}
+                className="cursor-pointer hover:bg-gray-50 transition-colors"
+              >
+                {(columnKey) => (
+                  <TableCell>{renderCell(item, columnKey as string)}</TableCell>
+                )}
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      )}
 
       <DeleteCampaignModal
         isOpenDelete={isOpenDelete}

@@ -1,6 +1,7 @@
 // Type-only: keeps the authenticated apiService (and its 401 logout redirect)
 // out of this customer-facing, no-auth module.
 import type { CheckoutData } from "./dashboard/qrPayment";
+import { enqueue } from "@/lib/offlineQueue";
 
 const BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}api/v1`;
 
@@ -205,6 +206,48 @@ export const getCustomerOrderByReference = async (
 };
 
 /**
+ * Stores a customer order locally for replay when connectivity returns.
+ *
+ * Used by `placeCustomerOrder` when the request cannot reach the server
+ * (offline, DNS, timeout). Public orders are placed unpaid (status 0) and can
+ * be paid later through the Paystack flow, so queueing the placement is safe
+ * under the pay-on-arrival model — the online payment step itself needs a
+ * connection and will surface its own network error offline.
+ */
+const queueCustomerOrderSubmission = (
+  payload: Record<string, unknown>,
+  businessId?: string,
+  cooperateId?: string,
+  userId?: string
+): { queued: true; queueId: string } => {
+  const headers: Record<string, string> = {};
+  if (businessId) headers["businessId"] = businessId;
+  if (cooperateId) headers["cooperateId"] = cooperateId;
+  if (userId) headers["userId"] = userId;
+
+  const queueId = `q_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+
+  enqueue({
+    id: queueId,
+    kind: "order",
+    url: "api/v1/Order/place",
+    payload: { ...payload, clientReference: queueId },
+    headers,
+    authenticated: false,
+  });
+
+  if (typeof window !== "undefined") {
+    // Lazy require keeps posthog-js out of any server bundle that imports this
+    // module; this branch only runs in the browser after a real network event.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { trackEvent } = require("@/lib/posthogAnalytics");
+    trackEvent("submission_queued", { kind: "order", surface: "public" });
+  }
+
+  return { queued: true, queueId };
+};
+
+/**
  * Place order for customer (no auth required)
  */
 export const placeCustomerOrder = async (
@@ -232,6 +275,17 @@ export const placeCustomerOrder = async (
   cooperateId?: string,
   userId?: string
 ) => {
+  // Offline before we even attempt the fetch: queue instead of wasting a
+  // doomed request (fetch would throw reachable-network errors only).
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    return queueCustomerOrderSubmission(
+      payload as unknown as Record<string, unknown>,
+      businessId,
+      cooperateId,
+      userId
+    );
+  }
+
   try {
     const url = `${BASE_URL}/Order/place`;
 
@@ -257,10 +311,18 @@ export const placeCustomerOrder = async (
       body: JSON.stringify(payload),
     });
 
+    // HTTP 4xx/5xx still returns a JSON body; the caller checks isSuccessful.
     return await response.json();
   } catch (error) {
+    // Network-level failure (offline, DNS, blocked): queue for later replay.
+    // A real server rejection never reaches this catch block.
     console.error("Error placing customer order:", error);
-    throw error;
+    return queueCustomerOrderSubmission(
+      payload as unknown as Record<string, unknown>,
+      businessId,
+      cooperateId,
+      userId
+    );
   }
 };
 

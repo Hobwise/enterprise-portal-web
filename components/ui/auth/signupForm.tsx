@@ -3,13 +3,38 @@ import { createUser } from '@/app/api/controllers/auth';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { useGlobalContext } from '@/hooks/globalProvider';
-import { notify } from '@/lib/utils';
+import { notify, clearAppStorage } from '@/lib/utils';
+import { saveSignupReferralCode } from '@/lib/referral';
+import { trackSignUpStarted } from '@/lib/posthogAnalytics';
 import { Spacer, Tooltip } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaRegEnvelope } from 'react-icons/fa6';
 import { LuArrowRight } from 'react-icons/lu';
 import { useQueryClient } from '@tanstack/react-query';
+
+// Query-string keys that can carry a referral code in the signup link,
+// e.g. /auth/signup?referral-code=HOB-C5VKRG
+const REFERRAL_CODE_QUERY_KEYS = ["referral-code", "referralCode", "referral"];
+
+// Referral links sometimes arrive as "?referral-code=?HOB-C5VKRG"; strip the
+// stray "?"/whitespace so we only keep the actual code.
+const sanitizeReferralCode = (value: string | null) => {
+  if (!value) return "";
+  return value.replace(/^[?\s]+/, "").trim().toUpperCase();
+};
+
+const getReferralCodeFromUrl = () => {
+  if (typeof window === "undefined") return "";
+
+  const params = new URLSearchParams(window.location.search);
+  for (const key of REFERRAL_CODE_QUERY_KEYS) {
+    const code = sanitizeReferralCode(params.get(key));
+    if (code) return code;
+  }
+
+  return "";
+};
 
 const SignupForm = () => {
   const router = useRouter();
@@ -24,9 +49,21 @@ const SignupForm = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    referralCode: "",
     role: 0,
     isActive: false,
   });
+
+  // Auto-fill the referral code when a visitor lands via a referral link.
+  useEffect(() => {
+    const referralCode = getReferralCodeFromUrl();
+    if (referralCode) {
+      setSignupFormData((prevFormData) => ({
+        ...prevFormData,
+        referralCode,
+      }));
+    }
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
@@ -40,7 +77,10 @@ const SignupForm = () => {
   const submitFormData = async (e) => {
     e.preventDefault();
     queryClient.clear();
-    localStorage.clear();
+    clearAppStorage();
+    // clearAppStorage wipes localStorage, so persist the referral code after it
+    // runs. It is applied later when the business is created.
+    saveSignupReferralCode(signupFormData.referralCode);
     setUserData(signupFormData);
     setLoading(true);
     const data = await createUser(signupFormData);
@@ -48,6 +88,9 @@ const SignupForm = () => {
     setResponse(data);
 
     if (data?.data?.isSuccessful) {
+      // Capture the attempt on the anonymous id; the account is only identified
+      // once the email is confirmed and we have a backend id.
+      trackSignUpStarted(signupFormData);
       setExpireTime(new Date(data.data.data));
       router.push("/auth/confirm-email");
     } else if (data?.data?.error) {
@@ -176,7 +219,7 @@ const SignupForm = () => {
         eyeIconStyle="text-base text-white/70 lg:text-[#1F2937]"
       />
 
-      <Spacer y={6} />
+      <Spacer y={4} />
 
       <CustomButton
         loading={loading}

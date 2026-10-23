@@ -7,15 +7,14 @@ import { usePathname } from 'next/navigation';
 
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { isPOSUser as checkIsPOSUser, isCategoryUser as checkIsCategoryUser } from '@/lib/userTypeUtils';
-import { useDisclosure } from '@nextui-org/react';
 import { motion, useCycle } from 'framer-motion';
-import { FiLock, FiLogOut } from 'react-icons/fi';
+import { FiLock } from 'react-icons/fi';
 import { IoIosArrowDown } from 'react-icons/io';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { useSubscriptionContext } from '@/hooks/providers/SubscriptionProvider';
 import { routePermissions } from '@/lib/routePermissions';
-import LogoutModal from '../logoutModal';
 import { SIDENAV_ITEMS, SIDENAV_CONFIG } from './constants';
+import BusinessSwitcher from './businessSwitcher';
 import { SideNavItem, SideNavSection } from './types';
 
 type MenuItemWithSubMenuProps = {
@@ -43,7 +42,6 @@ const sidebar = {
 };
 
 const HeaderMobile = () => {
-  const { isOpen, onOpenChange } = useDisclosure();
   const userInformation = getJsonItemFromLocalStorage('userInformation');
 
   const pathname = usePathname();
@@ -146,6 +144,13 @@ const HeaderMobile = () => {
     localStorage.setItem('mobile-sidebar-accordion-expanded', title);
   }, [expandedSection]);
 
+  useEffect(() => {
+    const handleMobileNavToggle = () => toggleOpen();
+    window.addEventListener('hobwise:mobile-nav-toggle', handleMobileNavToggle);
+    return () =>
+      window.removeEventListener('hobwise:mobile-nav-toggle', handleMobileNavToggle);
+  }, [toggleOpen]);
+
   if (isPOSUser || isCategoryUser) {
     return null;
   }
@@ -155,7 +160,7 @@ const HeaderMobile = () => {
       initial={false}
       animate={isOpenClass ? 'open' : 'closed'}
       custom={height}
-      className={`fixed inset-0 z-50 w-full md:hidden ${
+      className={`fixed inset-0 z-50 w-full lg:hidden ${
         isOpenClass ? '' : 'pointer-events-none'
       }`}
       ref={containerRef}
@@ -163,11 +168,16 @@ const HeaderMobile = () => {
       <motion.div
         className='absolute inset-0 right-0 w-full bg-black'
         variants={sidebar}
+        onClick={() => toggleOpen()}
       />
       <motion.ul
         variants={variants}
         className='absolute grid w-full gap-3 px-10 py-16 max-h-screen overflow-y-auto'
       >
+        <MenuItem>
+          <BusinessSwitcher variant='mobile' />
+        </MenuItem>
+        <MenuItem className='h-px w-full bg-gray-600' />
         {filteredSections.map((section, sectionIdx) => (
           <MobileSectionGroup
             key={section.sectionTitle}
@@ -180,62 +190,33 @@ const HeaderMobile = () => {
           />
         ))}
       </motion.ul>
-      <MenuToggle toggle={toggleOpen} />
-      <div
-        onClick={onOpenChange}
-        className={`cursor-pointer  gap-3 text-xl font-bold text-danger-500 ${
-          isOpenClass ? 'flex ' : 'hidden'
-        } items-center absolute bottom-[30px] left-[40px]`}
+      <motion.button
+        type='button'
+        onClick={() => toggleOpen()}
+        aria-label='Close navigation menu'
+        variants={MenuItemVariants}
+        className='absolute right-5 top-5 z-10 flex h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10'
       >
-        <span>Logout</span>
-        <FiLogOut />
-      </div>
-      <LogoutModal onOpenChange={onOpenChange} isOpen={isOpen} />
+        <svg
+          width='22'
+          height='22'
+          viewBox='0 0 24 24'
+          fill='none'
+          aria-hidden='true'
+        >
+          <path
+            d='M6 6l12 12M18 6L6 18'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+          />
+        </svg>
+      </motion.button>
     </motion.nav>
   );
 };
 
 export default HeaderMobile;
-
-const MenuToggle = ({ toggle }: { toggle: any }) => (
-  <button
-    onClick={toggle}
-    className='pointer-events-auto absolute left-4  top-[14px] z-30'
-  >
-    <svg width='23' height='23' viewBox='0 0 23 23'>
-      <Path
-        variants={{
-          closed: { d: 'M 2 2.5 L 20 2.5' },
-          open: { d: 'M 3 16.5 L 17 2.5' },
-        }}
-      />
-      <Path
-        d='M 2 9.423 L 20 9.423'
-        variants={{
-          closed: { opacity: 1 },
-          open: { opacity: 0 },
-        }}
-        transition={{ duration: 0.1 }}
-      />
-      <Path
-        variants={{
-          closed: { d: 'M 2 16.346 L 20 16.346' },
-          open: { d: 'M 3 2.5 L 17 16.346' },
-        }}
-      />
-    </svg>
-  </button>
-);
-
-const Path = (props: any) => (
-  <motion.path
-    fill='transparent'
-    strokeWidth='2'
-    stroke='hsl(0, 0%, 18%)'
-    strokeLinecap='round'
-    {...props}
-  />
-);
 
 const MenuItem = ({
   className,

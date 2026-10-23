@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { DASHBOARD } from "../../api-url";
 import api, { handleError } from "../../apiService";
+import { isOfflineFailure } from "@/lib/offlineQueue";
+import { submitWithQueue } from "@/lib/submitWithQueue";
 import { emailValidation, inputNameValidation } from "../validations";
 
 interface Bookings {
@@ -47,11 +49,21 @@ export async function createBooking(
   const headers = businessId ? { businessId, cooperateID } : {};
 
   try {
-    const data = await api.post(DASHBOARD.bookings, payload, {
+    const result = await submitWithQueue<any>({
+      kind: 'booking',
+      url: DASHBOARD.bookings,
+      payload,
       headers,
     });
 
-    return data;
+    if (result.status === 'sent') return result.data;
+    // Queued: report success to the caller so the UX moves forward, but flag
+    // it so the UI can say "saved, will send when you're back online".
+    if (result.status === 'queued') {
+      return { queued: true, queueId: result.queueId };
+    }
+
+    handleError(result.error);
   } catch (error) {
     handleError(error);
   }
@@ -113,6 +125,10 @@ export async function getBookingCategories(
 
     return data;
   } catch (error) {
+    // Surface network-level failures (offline, DNS, timeout) so pages can
+    // serve cached data or show a retry instead of a silent empty list.
+    // Server (HTTP) errors keep the existing behavior.
+    if (isOfflineFailure(error)) throw error;
     handleError(error, false);
   }
 }
@@ -139,6 +155,10 @@ export async function getBookingDetails(
 
 
   } catch (error) {
+    // Surface network-level failures (offline, DNS, timeout) so pages can
+    // serve cached data or show a retry instead of a silent empty list.
+    // Server (HTTP) errors keep the existing behavior.
+    if (isOfflineFailure(error)) throw error;
     handleError(error, false);
   }
 }

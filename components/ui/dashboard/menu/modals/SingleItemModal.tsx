@@ -122,8 +122,8 @@ const SingleItemModal = ({
           <>
             <ModalBody className="p-0">
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b">
-                <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-3 p-3 sm:p-6 border-b sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center">
                   <button
                     onClick={() => onOpenChange(false)}
                     className="flex items-center gap-2 text-[#5F35D2] hover:text-[#5F35D2]"
@@ -133,17 +133,17 @@ const SingleItemModal = ({
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   <button
                     onClick={() => setIsEditModalOpen(true)}
-                    className="text-gray-700 px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+                    className="text-gray-700 px-2.5 sm:px-6 py-1.5 sm:py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 flex-1 sm:flex-none justify-center"
                   >
                     <Edit className="w-4 h-4" />
                     <span>Edit</span>
                   </button>
                   <button
                     onClick={() => openCreateVarietyModal(selectedItem)}
-                    className="text-gray-700 px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+                    className="text-gray-700 px-2.5 sm:px-6 py-1.5 sm:py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 flex-1 sm:flex-none justify-center"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Create variety</span>
@@ -151,7 +151,7 @@ const SingleItemModal = ({
                   {onDeleteItem && (
                     <button
                       onClick={() => setIsDeleteModalOpen(true)}
-                      className="text-red-600 px-6 py-2.5 border border-red-300 rounded-lg hover:bg-red-50 flex items-center gap-2"
+                      className="text-red-600 px-2.5 sm:px-6 py-1.5 sm:py-2.5 border border-red-300 rounded-lg hover:bg-red-50 flex items-center gap-2 flex-1 sm:flex-none justify-center"
                     >
                       <Trash2 className="w-4 h-4" />
                       <span>Delete</span>
@@ -161,8 +161,8 @@ const SingleItemModal = ({
               </div>
 
               {/* Content */}
-              <div className="p-6">
-                <div className="grid grid-cols-1 items-center lg:grid-cols-5 gap-8">
+              <div className="p-3 sm:p-6">
+                <div className="grid grid-cols-1 items-center lg:grid-cols-5 gap-6 lg:gap-8">
                   {/* Main Item */}
                   <div className="lg:col-span-3">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -180,7 +180,7 @@ const SingleItemModal = ({
                                 : "/assets/images/no-image.svg"
                             }
                             alt={selectedItem.itemName}
-                            className="w-full h-[20rem] object-cover transition-transform duration-300 hover:scale-105"
+                            className="w-full h-60 sm:h-[20rem] object-cover transition-transform duration-300 hover:scale-105"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src =
                                 "/assets/images/no-image.svg";
@@ -192,7 +192,7 @@ const SingleItemModal = ({
                       {/* Item Details */}
                       <div className="space-y-4">
                         <div>
-                          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
                             {selectedItem.itemName}
                           </h2>
                           <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#5F35D2]/10 text-[#5F35D2] mb-3">
@@ -205,7 +205,7 @@ const SingleItemModal = ({
                         </p>
 
                         <div className="pt-4 border-t border-gray-200">
-                          <p className="text-3xl font-bold text-[#5F35D2]">
+                          <p className="text-2xl sm:text-3xl font-bold text-[#5F35D2]">
                             ₦
                             {selectedItem.price.toLocaleString("en-NG", {
                               minimumFractionDigits: 2,
@@ -214,7 +214,7 @@ const SingleItemModal = ({
                         </div>
 
                         {/* Availability Toggle */}
-                        <div className="flex items-center gap-3 mt-6 pt-4 border-t border-gray-200">
+                        <div className="flex items-center gap-3 mt-6 pt-4 border-t border-gray-200 flex-wrap">
                           <span className="text-gray-600 font-medium">
                             Availability:
                           </span>
@@ -240,12 +240,16 @@ const SingleItemModal = ({
                   </div>
 
                   {/* Varieties */}
-                  <div className="lg:col-span-2">
-                    <div className="bg-gray-50 rounded-xl p-6 h-full">
+                  <div className={`lg:col-span-2 ${
+                    selectedItem.varieties && selectedItem.varieties.length > 0
+                      ? ''
+                      : 'hidden lg:block'
+                  }`}>
+                    <div className="bg-gray-50 rounded-xl p-3 sm:p-6 h-full">
                       <div className="w-10 h-10 bg-gradient-to-br from-[#5F35D2] to-[#7C69D8] rounded-lg flex items-center justify-center shadow-lg">
                         <Star className="w-5 h-5 text-white" />
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4">
                         Varieties
                       </h3>
                       <div className="space-y-4 max-h-96 overflow-y-auto">
@@ -254,9 +258,9 @@ const SingleItemModal = ({
                           selectedItem.varieties.map((variety: any) => (
                             <div
                               key={variety.id}
-                              className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md hover:border-[#5F35D2]/20 transition-all duration-200 group"
+                              className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md hover:border-[#5F35D2]/20 transition-all duration-200 group"
                             >
-                              <div className="flex justify-between items-start mb-2">
+                              <div className="flex justify-between items-start gap-2 mb-2">
                                 <h4 className="font-semibold text-gray-800">
                                   {variety.unit || variety.name}
                                 </h4>
@@ -266,7 +270,7 @@ const SingleItemModal = ({
                                       Out of Stock
                                     </span>
                                   )}
-                                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <div className="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                                     {onEditVariety && (
                                       <button
                                         onClick={(e) => {
@@ -306,7 +310,7 @@ const SingleItemModal = ({
                               )}
 
                               <div className="flex justify-between items-end">
-                                <span className="text-lg font-bold text-[#5F35D2]">
+                                <span className="text-base sm:text-lg font-bold text-[#5F35D2]">
                                   ₦
                                   {variety.price?.toLocaleString("en-NG", {
                                     minimumFractionDigits: 2,

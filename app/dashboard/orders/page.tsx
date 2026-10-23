@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import Error from "@/components/error";
+import OfflineDataBanner from "@/components/ui/dashboard/OfflineDataBanner";
 import CreateOrder from "@/components/ui/dashboard/orders/createOrder";
 import OrdersList from "@/components/ui/dashboard/orders/order";
 import useOrder from "@/hooks/cachedEndpoints/useOrder";
@@ -18,6 +19,8 @@ import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 import DateRangeDisplay from "@/components/ui/dashboard/DateRangeDisplay";
 import CustomPagination from "@/components/ui/dashboard/settings/BillingsComponents/CustomPagination";
 import { getJsonItemFromLocalStorage, formatPrice } from "@/lib/utils";
+import { useOfflineQueueSync } from "@/hooks/useOfflineQueueSync";
+import { withQueuedOrders } from "@/lib/orderCategories";
 
 // Type definitions are handled in the component files
 
@@ -36,8 +39,14 @@ const OrdersContent: React.FC = () => {
     filterType,
     startDate,
     endDate,
+    dataUpdatedAt,
   } = useDateFilter(useOrder);
   const { userRolePermissions, role } = usePermission();
+
+  // Queued (offline) orders have no server record, so the category counts the
+  // API returns never include them. Fold them in here so the POS summary cards
+  // match the list below and update the moment an order is queued.
+  const { orders: queuedOrders } = useOfflineQueueSync();
 
   const [searchQuery, setSearchQuery] = useState("");
   const { setPage, setTableStatus, page, tableStatus } = useGlobalContext();
@@ -68,6 +77,11 @@ const OrdersContent: React.FC = () => {
   };
 
   const data = { categories, details };
+
+  const categoriesWithQueued = React.useMemo(
+    () => withQueuedOrders(categories, queuedOrders) ?? [],
+    [categories, queuedOrders]
+  );
 
   // Extract pagination info from details response
   const paginationData = React.useMemo(() => {
@@ -113,10 +127,19 @@ const OrdersContent: React.FC = () => {
   if (isLoading && categories.length === 0) {
     return <CustomLoading />;
   }
-  if (isError) return <Error onClick={() => refetch()} />;
+  // Only show the full-screen error when there is nothing to fall back to.
+  // If stale rows are still on screen, the page renders them under a banner.
+  if (isError && categories.length === 0) {
+    return <Error onClick={() => refetch()} />;
+  }
 
   return (
     <>
+      <OfflineDataBanner
+        visible={isError && categories.length > 0}
+        dataUpdatedAt={dataUpdatedAt}
+        onRetry={refetch}
+      />
       <div className="flex flex-col md:flex-row gap-4 mb-4 xl:mb-8 items-start md:items-center justify-between w-full">
         <div>
           <div className="text-[24px] leading-8 font-semibold">
@@ -211,8 +234,8 @@ const OrdersContent: React.FC = () => {
 
       <>
       {data.categories && data.categories.length > 0 && (
-        <div className="flex w-full md:grid grid-cols-5 overflow-x-auto p-3 gap-4 mb-6 pb-2 snap-x snap-mandatory ">
-          {data.categories.map((category: any) => {
+        <div className="flex lg:grid overflow-x-auto lg:overflow-x-visible lg:grid-cols-4 gap-3 lg:gap-4 mb-6 pb-2 snap-x snap-mandatory lg:snap-none">
+          {categoriesWithQueued.map((category: any) => {
             const currentStatus = tableStatus || 'All Orders';
             const isActive = currentStatus === category.name || (!currentStatus && category.name === 'All');
             return (
@@ -223,8 +246,8 @@ const OrdersContent: React.FC = () => {
                   setPage(1);
                 }}
                 className={`
-                  relative rounded-lg p-4 w-auto lg:p-6 cursor-pointer transition-all duration-300
-                   lg:min-w-0 flex-shrink-0 lg:flex-shrink snap-center lg:snap-align-none
+                  relative rounded-lg p-4 lg:p-6 cursor-pointer transition-all duration-300
+                  min-w-[200px] lg:min-w-0 flex-shrink-0 lg:flex-shrink snap-center lg:snap-align-none
                   ${isActive
                     ? 'bg-gradient-to-br from-primaryColor to-secondaryColor text-white shadow-lg scale-105'
                     : 'bg-white border border-gray-200 text-gray-900 hover:shadow-md hover:scale-102'
@@ -235,7 +258,7 @@ const OrdersContent: React.FC = () => {
                   <h3 className={`text-xs lg:text-sm font-semibold uppercase tracking-wide ${isActive ? 'text-white/90' : 'text-gray-500'}`}>
                     {category.name === 'AwaitingConfirmation Orders' ? 'AWAITING CONFIRMATION ORDERS' : category.name}
                   </h3>
-                  <div className={`text-2xl lg:text-3xl font-bold ${isActive ? 'text-white' : 'text-gray-900'}`}>
+                  <div className={`text-xl lg:text-2xl font-bold break-words tabular-nums ${isActive ? 'text-white' : 'text-gray-900'}`}>
                     {formatPrice(category.totalAmount, 'NGN')}
                   </div>
                   <p className={`text-xs lg:text-sm ${isActive ? 'text-white/80' : 'text-gray-500'}`}>

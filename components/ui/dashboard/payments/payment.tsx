@@ -7,6 +7,7 @@ import {
   Dropdown,
   DropdownItem,
   DropdownMenu,
+  DropdownSection,
   DropdownTrigger,
   Spinner,
   Table,
@@ -27,6 +28,7 @@ import { columns, paymentTypeMap, statusColorMap, statusDataMap, isCheckoutPayme
 import moment from "moment";
 
 import { useGlobalContext } from "@/hooks/globalProvider";
+import usePagination from "@/hooks/usePagination";
 import { formatPrice } from "@/lib/utils";
 import ApprovePayment from "./approvePayment";
 import Filters from "./filters";
@@ -157,34 +159,54 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
     useGlobalContext();
 
   // Use the payments prop directly - API already returns category-specific data
-  const paymentDetails = getFilteredPaymentDetails(
-    payments,
-    isLoading,
-    isPending || false,
-    searchQuery
-  );
+  // Memoize to prevent infinite loops in usePagination
+  const paymentDetails = React.useMemo(() => 
+    getFilteredPaymentDetails(
+      payments,
+      isLoading,
+      isPending || false,
+      searchQuery
+    ),
+  [payments, isLoading, isPending, searchQuery]);
 
-  // State for table sorting and selection
-  const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
-    new Set([])
-  );
-  const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
-    column: "dateCreated",
-    direction: "descending",
-  });
+  // Create pagination data structure for usePagination hook (matching Orders component)
+  const paginationData = React.useMemo(() => {
+    return {
+      data: paymentDetails,
+      totalPages: totalPages || 1,
+      currentPage: currentPage || 1,
+      hasNext: hasNext || false,
+      hasPrevious: hasPrevious || false,
+      totalCount: totalCount || 0,
+    };
+  }, [paymentDetails, currentPage, totalPages, hasNext, hasPrevious, totalCount]);
 
-  // Filter visible columns
-  const headerColumns = React.useMemo(() => {
-    return columns.filter((column) =>
-      INITIAL_VISIBLE_COLUMNS.includes(column.uid)
-    );
-  }, []);
+  // Use usePagination hook for mobile/desktop responsive layout (matching Orders component)
+  const {
+    headerColumns,
+    setSelectedKeys,
+    selectedKeys,
+    sortDescriptor,
+    setSortDescriptor,
+    filterValue,
+    statusFilter,
+    visibleColumns,
+    onSearchChange,
+    onRowsPerPageChange,
+    classNames,
+    hasSearchFilter,
+    displayData,
+    isMobile,
+    isLoadingMore,
+    bottomContent,
+  } = usePagination(paginationData, columns, INITIAL_VISIBLE_COLUMNS);
 
   // Sort the payments based on sortDescriptor
+  // Use displayData which contains accumulated data on mobile, current page on desktop
   const sortedPayments = React.useMemo(() => {
-    if (!paymentDetails || paymentDetails.length === 0) return paymentDetails;
+    if (!displayData || displayData.length === 0) return displayData;
 
-    return [...paymentDetails].sort((a: PaymentItem, b: PaymentItem) => {
+    return [...displayData].sort((a: PaymentItem, b: PaymentItem) => {
       const first = a[sortDescriptor.column as keyof PaymentItem];
       const second = b[sortDescriptor.column as keyof PaymentItem];
 
@@ -196,7 +218,23 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
 
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
-  }, [paymentDetails, sortDescriptor]);
+  }, [displayData, sortDescriptor]);
+
+  // State for table sorting and selection (kept for backward compatibility with desktop table)
+  const [selectedKeysLegacy, setSelectedKeysLegacy] = React.useState<Selection>(
+    new Set([])
+  );
+  const [sortDescriptorLegacy, setSortDescriptorLegacy] = React.useState<SortDescriptor>({
+    column: "dateCreated",
+    direction: "descending",
+  });
+
+  // Filter visible columns (legacy - for desktop table)
+  const headerColumnsLegacy = React.useMemo(() => {
+    return columns.filter((column) =>
+      INITIAL_VISIBLE_COLUMNS.includes(column.uid)
+    );
+  }, []);
 
   // Explicit open/close avoids the phase-desync that a setIsOpen(!isOpen)
   // toggle suffers when onOpenChange fires out of sync — which made row
@@ -322,6 +360,98 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
     []
   );
 
+  const renderMobileCard = React.useCallback(
+    (payment: PaymentItem) => (
+      <article
+        key={payment.id}
+        className="p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors"
+        onClick={() => handleRowClick(payment)}
+      >
+        <div className="flex items-end justify-end mb-3 mt-2">
+          <div className="ml-2" onClick={(e) => e.stopPropagation()}>
+            <Dropdown aria-label="payment actions" className="">
+              <DropdownTrigger aria-label="actions">
+                <div className="cursor-pointer flex justify-center items-center text-black p-2 -m-2">
+                  <HiOutlineDotsVertical className="text-[20px]" />
+                </div>
+              </DropdownTrigger>
+              <DropdownMenu className="text-black">
+                <DropdownSection>
+                  <DropdownItem
+                    key="view-more"
+                    onClick={() => openApproveModal(payment)}
+                    aria-label="View more"
+                  >
+                    <div className="flex gap-3 items-center text-grey500">
+                      <GrFormView className="text-[18px]" />
+                      <p>View more</p>
+                    </div>
+                  </DropdownItem>
+                  {isCheckoutPayment(payment.paymentMethod) && (
+                    <DropdownItem
+                      key="payment-breakdown"
+                      onClick={() => togglePaymentBreakdownModal(payment)}
+                      aria-label="Payment Breakdown"
+                    >
+                      <div className="flex gap-3 items-center text-grey500">
+                        <Info className="w-[18px] h-[18px]" />
+                        <p>Payment Breakdown</p>
+                      </div>
+                    </DropdownItem>
+                  )}
+                </DropdownSection>
+              </DropdownMenu>
+            </Dropdown>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-semibold text-black text-[15px]">
+                {paymentTypeMap[payment.paymentType]}
+              </span>
+            </div>
+            <div className="text-textGrey text-[13px]">{payment.customer}</div>
+          </div>
+          <div>
+            <div className="text-[11px] text-textGrey uppercase mb-1">Amount</div>
+            <div className="text-black font-semibold text-[15px]">
+              {formatPrice(payment.totalAmount)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[11px] text-textGrey uppercase mb-1">Table</div>
+            <div className="text-black font-semibold text-[15px]">
+              {payment.qrName}
+            </div>
+          </div>
+          <div>
+            <div className="text-[11px] text-textGrey uppercase mb-1">Order ID</div>
+            <div className="text-black text-[13px] truncate">
+              {payment.reference}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Chip
+            className="capitalize"
+            color={statusColorMap[payment.status]}
+            size="sm"
+            variant="bordered"
+          >
+            {statusDataMap[payment.status]}
+          </Chip>
+          <div className="text-textGrey text-[12px]">
+            {moment(payment.dateCreated).format("MMM DD, YYYY h:mm A")}
+          </div>
+        </div>
+      </article>
+    ),
+    []
+  );
+
   const topContent = React.useMemo(() => {
     return (
       <Filters
@@ -352,33 +482,6 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
   // Only show loading spinner on initial load when there's no data
   const shouldShowLoading = isLoading && paymentDetails.length === 0;
 
-  // Table styling - matching order table
-  const classNames = React.useMemo(
-    () => ({
-      wrapper: ["max-h-[382px]"],
-      th: [
-        "text-default-500",
-        "text-xs",
-        "border-b",
-        "border-divider",
-        "py-4",
-        "rounded-none",
-        "bg-grey300",
-      ],
-      tr: "border-b border-divider rounded-none",
-      td: [
-        "py-3",
-        "text-textGrey",
-        "group-data-[first=true]:first:before:rounded-none",
-        "group-data-[first=true]:last:before:rounded-none",
-        "group-data-[middle=true]:before:rounded-none",
-        "group-data-[last=true]:first:before:rounded-none",
-        "group-data-[last=true]:last:before:rounded-none",
-      ],
-    }),
-    []
-  );
-
   // Handle row click to open payment details
   const handleRowClick = (payment: PaymentItem) => {
     openApproveModal(payment);
@@ -386,56 +489,99 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
 
   return (
     <section className="border border-primaryGrey rounded-lg overflow-hidden">
-      <div className="overflow-x-auto">
-        <Table
-          radius="lg"
-          isCompact
-          removeWrapper
-          aria-label="list of payments"
-          bottomContentPlacement="outside"
-          classNames={classNames}
-          selectedKeys={selectedKeys}
-          sortDescriptor={sortDescriptor as SortDescriptor}
-          topContent={topContent}
-          topContentPlacement="outside"
-          onSelectionChange={setSelectedKeys as (keys: Selection) => void}
-          onSortChange={
-            setSortDescriptor as (descriptor: SortDescriptor) => void
-          }
-        >
-          <TableHeader columns={headerColumns}>
-            {(column) => (
-              <TableColumn
-                key={column.uid}
-                align={column.uid === "actions" ? "center" : "start"}
-                allowsSorting={column.sortable}
-              >
-                {column.name}
-              </TableColumn>
+      {/* Filters - shown on both mobile and desktop */}
+      {topContent}
+
+      {/* Mobile Card Layout */}
+      {isMobile ? (
+        <div className="divide-y divide-primaryGrey">
+          {/* Loading state */}
+          {shouldShowLoading && (
+            <div className="flex justify-center items-center py-16">
+              <SpinnerLoader size="md" />
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!shouldShowLoading && sortedPayments.length === 0 && (
+            <div className="flex justify-center items-center py-16 text-textGrey">
+              {paymentDetails.length === 0
+                ? `No results found`
+                : "No payments found"}
+            </div>
+          )}
+
+          {/* Payment Cards */}
+          {!shouldShowLoading &&
+            sortedPayments.map((payment: PaymentItem) =>
+              renderMobileCard(payment)
             )}
-          </TableHeader>
-          <TableBody
-            isLoading={shouldShowLoading}
-            loadingContent={<SpinnerLoader size="md" />}
-            emptyContent={"No payment(s) found"}
-            items={shouldShowLoading ? [] : sortedPayments}
+
+          {/* Infinite Scroll Sentinel & Loading Indicator from usePagination */}
+          {bottomContent}
+        </div>
+      ) : (
+        /* Desktop Table Layout */
+        <div className="overflow-x-auto">
+          <Table
+            radius="lg"
+            isCompact
+            removeWrapper
+            aria-label="list of payments"
+            bottomContent={bottomContent}
+            bottomContentPlacement="outside"
+            classNames={classNames}
+            selectedKeys={selectedKeys}
+            sortDescriptor={sortDescriptor as SortDescriptor}
+            topContent={null}
+            topContentPlacement="outside"
+            onSelectionChange={setSelectedKeys as (keys: Selection) => void}
+            onSortChange={
+              setSortDescriptor as (descriptor: SortDescriptor) => void
+            }
           >
-            {(payment: PaymentItem) => (
-              <TableRow
-                key={String(payment?.id)}
-                className="cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => handleRowClick(payment)}
-              >
-                {(columnKey) => (
-                  <TableCell>
-                    {renderCell(payment, String(columnKey))}
-                  </TableCell>
-                )}
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+            <TableHeader columns={headerColumns}>
+              {(column) => (
+                <TableColumn
+                  key={column.uid}
+                  align={column.uid === "actions" ? "center" : "start"}
+                  allowsSorting={column.sortable}
+                >
+                  {column.name}
+                </TableColumn>
+              )}
+            </TableHeader>
+            <TableBody
+              isLoading={shouldShowLoading}
+              loadingContent={<SpinnerLoader size="md" />}
+              emptyContent={
+                paymentDetails.length === 0 ? (
+                  `No results found `
+                ) : !shouldShowLoading ? (
+                  "No payments found"
+                ) : (
+                  <SpinnerLoader size="md" />
+                )
+              }
+              items={shouldShowLoading ? [] : sortedPayments}
+            >
+              {(payment: PaymentItem) => (
+                <TableRow
+                  key={String(payment?.id)}
+                  className="cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => handleRowClick(payment)}
+                >
+                  {(columnKey) => (
+                    <TableCell>
+                      {renderCell(payment, String(columnKey))}
+                    </TableCell>
+                  )}
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
       <ApprovePayment
         refetch={refetch}
         singlePayment={singlePayment}

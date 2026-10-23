@@ -1,7 +1,7 @@
 'use client';
 import { getBookingCategories, getBookingDetails } from '@/app/api/controllers/dashboard/bookings';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
 interface Booking {
@@ -45,11 +45,13 @@ const useAllBookingsData = (
   const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
 
   // 1. Fetch categories (tab names + counts)
-  const { 
-    data: categoriesData, 
+  const {
+    data: categoriesData,
     isLoading: isLoadingCategories,
     isError: isCategoriesError,
-    refetch: refetchCategories
+    refetch: refetchCategories,
+    dataUpdatedAt: categoriesUpdatedAt,
+    isFetching: categoriesFetching,
   } = useQuery({
     queryKey: ['bookingCategories'],
     queryFn: async () => {
@@ -60,6 +62,7 @@ const useAllBookingsData = (
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
+    placeholderData: keepPreviousData,
   });
 
   const categories = categoriesData?.bookingCategories || [];
@@ -89,6 +92,7 @@ const useAllBookingsData = (
     enabled: !!activeCategoryName && categories.length > 0 && hasItems,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 
   // Track when initial load completes (categories + first tab)
@@ -97,12 +101,12 @@ const useAllBookingsData = (
     if (
       !isLoadingCategories &&
       !isLoadingDetails &&
-      categories.length > 0 &&
+      (categories.length > 0 || isCategoriesError) &&
       !hasInitiallyLoaded
     ) {
       setHasInitiallyLoaded(true);
     }
-  }, [isLoadingCategories, isLoadingDetails, categories, hasInitiallyLoaded]);
+  }, [isLoadingCategories, isLoadingDetails, categories, isCategoriesError, hasInitiallyLoaded]);
 
   // Get details for a specific category
   const getCategoryDetails = (categoryName: string) => {
@@ -149,6 +153,8 @@ const useAllBookingsData = (
     isLoadingAll: false, // Kept for backward compatibility
     isError: isCategoriesError,
     refetch: refetchAll,
+    dataUpdatedAt: categoriesUpdatedAt,
+    isFetching: categoriesFetching,
     allCategoryDetails: {} // Kept for backward compatibility
   };
 };

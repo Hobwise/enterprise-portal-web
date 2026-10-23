@@ -5,7 +5,7 @@ import {
 } from '@/app/api/controllers/dashboard/campaigns';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-const useSingleCampaign = (campaignId: any) => {
+const useSingleCampaign = (campaignId: string) => {
   const businessInformation = getJsonItemFromLocalStorage('business');
 
   const getSingleReservation = async () => {
@@ -13,13 +13,14 @@ const useSingleCampaign = (campaignId: any) => {
       campaignId,
       businessInformation[0]?.businessId
     );
-    return responseData?.data?.data as payloadCampaignItem[];
+    return (responseData?.data?.data as payloadCampaignItem[]) ?? [];
   };
 
   const { data, isLoading, isError, refetch } = useQuery<payloadCampaignItem[]>({
-    queryKey: ['useSingleCampaign'],
+    queryKey: ['useSingleCampaign', campaignId],
     queryFn: getSingleReservation,
     refetchOnWindowFocus: false,
+    enabled: !!campaignId,
   });
 
   return {

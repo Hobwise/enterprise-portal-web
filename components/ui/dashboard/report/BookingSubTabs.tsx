@@ -2,12 +2,12 @@
 
 import React, { useMemo, useState } from 'react';
 import moment from 'moment';
-import { Button, Skeleton } from '@nextui-org/react';
-import { FiDownload } from 'react-icons/fi';
+import { Skeleton } from '@nextui-org/react';
 import { formatPrice } from '@/lib/utils';
-import { StatCards } from './SharedPanels';
+import { reportTableClass, StatCards } from './SharedPanels';
 import { TablePagination } from './SalesPanels';
-import { ExportType } from './exportHelpers';
+import { ExportType, ExportTypeValue } from './exportHelpers';
+import ExportButtons from './ExportButtons';
 import {
   BookingReportItem,
   BookingReportResponse,
@@ -45,40 +45,9 @@ interface BookingSubTabPanelProps {
   data?: BookingReportResponse;
   isLoading?: boolean;
   onExport?: (exportType: number) => void | Promise<void>;
-  isExporting?: boolean;
+  exportingType?: ExportTypeValue | null;
 }
 
-interface ExportButtonsProps {
-  onExportExcel?: () => void;
-  onExportPdf?: () => void;
-  isLoading?: boolean;
-}
-
-const ExportButtons: React.FC<ExportButtonsProps> = ({
-  onExportExcel,
-  onExportPdf,
-  isLoading,
-}) => (
-  <div className="flex items-center gap-2 px-5 py-4">
-    <Button
-      variant="bordered"
-      onPress={onExportExcel}
-      isLoading={isLoading}
-      startContent={isLoading ? null : <FiDownload size={14} />}
-      className="border border-gray-200 text-gray-700 bg-white rounded-lg text-xs h-9"
-    >
-      Export Excel
-    </Button>
-    <Button
-      onPress={onExportPdf}
-      isLoading={isLoading}
-      startContent={isLoading ? null : <FiDownload size={14} />}
-      className="bg-primaryColor text-white rounded-lg text-xs h-9"
-    >
-      Export PDF
-    </Button>
-  </div>
-);
 
 const buildExportHandlers = (
   onExport?: (exportType: number) => void | Promise<void>
@@ -126,7 +95,7 @@ export const BookingSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [statusTab, setStatusTab] = useState<string>('all');
   const [page, setPage] = useState(1);
@@ -227,7 +196,7 @@ export const BookingSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               Booking Summary
@@ -247,27 +216,27 @@ export const BookingSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
               ))}
             </select>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(9)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <th className="text-left px-5 py-3 font-medium">
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">
                   Booking Date
                 </th>
-                <th className="text-left px-5 py-3 font-medium">Customer</th>
-                <th className="text-left px-5 py-3 font-medium">Email</th>
-                <th className="text-left px-5 py-3 font-medium">Phone</th>
-                <th className="text-left px-5 py-3 font-medium">Guests</th>
-                <th className="text-left px-5 py-3 font-medium">
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">Customer</th>
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">Email</th>
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">Phone</th>
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">Guests</th>
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">
                   Booking Fee
                 </th>
-                <th className="text-left px-5 py-3 font-medium">
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">
                   Minimum Spend
                 </th>
-                <th className="text-left px-5 py-3 font-medium">Check-In</th>
-                <th className="text-left px-5 py-3 font-medium">Status</th>
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">Check-In</th>
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -280,36 +249,36 @@ export const BookingSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
                     className="hover:bg-gray-50"
                     title={b.statusComment || undefined}
                   >
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {isValidDate(b.dateCreated)
                         ? moment(b.dateCreated).format('MMM DD, hh:mma')
                         : '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {fullName(b)}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {b.emailAddress || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {b.phoneNumber || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {safeNumber(b.numberOfGuest).toLocaleString()}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {b.bookingFee || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-900 font-semibold">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-semibold">
                       {b.minimumSpend || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {b.bookingDateTime
                         ? moment(b.bookingDateTime).format('MMM DD, hh:mma')
                         : '—'}
                     </td>
                     <td
-                      className={`px-5 py-4 font-medium ${statusColor(
+                      className={`px-3 sm:px-5 py-4 font-medium ${statusColor(
                         b.bookingStatus
                       )}`}
                     >
@@ -337,7 +306,7 @@ export const ReservationSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const exportHandlers = buildExportHandlers(onExport);
   const [page, setPage] = useState(1);
@@ -406,26 +375,26 @@ export const ReservationSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 pr-5">
-          <h3 className="px-5 py-4 text-base font-semibold text-gray-900">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
+          <h3 className="text-base font-semibold text-gray-900">
             Reservation Summary
           </h3>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(4)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <th className="text-left px-5 py-3 font-medium">
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">
                   Reservation Name
                 </th>
-                <th className="text-left px-5 py-3 font-medium">
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">
                   Total Bookings
                 </th>
-                <th className="text-left px-5 py-3 font-medium">
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">
                   Total Booking Fee
                 </th>
-                <th className="text-left px-5 py-3 font-medium">
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">
                   Last Activity
                 </th>
               </tr>
@@ -446,16 +415,16 @@ export const ReservationSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
                     key={`${r.reservationName}-${index}`}
                     className="hover:bg-gray-50"
                   >
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {r.reservationName || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {safeNumber(r.totalBookings).toLocaleString()}
                     </td>
-                    <td className="px-5 py-4 text-gray-900 font-semibold">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-semibold">
                       {r.totalBookingFee}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {r.dateUpdated
                         ? moment(r.dateUpdated).format('MMM DD, YYYY')
                         : '—'}
@@ -495,7 +464,7 @@ export const OccupancyUtilizationPanel: React.FC<BookingSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const exportHandlers = buildExportHandlers(onExport);
   const [page, setPage] = useState(1);
@@ -565,33 +534,33 @@ export const OccupancyUtilizationPanel: React.FC<BookingSubTabPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 pr-5">
-          <h3 className="px-5 py-4 text-base font-semibold text-gray-900">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
+          <h3 className="text-base font-semibold text-gray-900">
             Daily Occupancy & Utilization
           </h3>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(7)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <th className="text-left px-5 py-3 font-medium">
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">
                   Reservation
                 </th>
-                <th className="text-left px-5 py-3 font-medium">Capacity</th>
-                <th className="text-left px-5 py-3 font-medium">
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">Capacity</th>
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">
                   Total Bookings
                 </th>
-                <th className="text-left px-5 py-3 font-medium">
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">
                   Unused Capacity
                 </th>
-                <th className="text-left px-5 py-3 font-medium">
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">
                   Occupancy Rate
                 </th>
-                <th className="text-left px-5 py-3 font-medium">
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">
                   Avg. Daily Utilization
                 </th>
-                <th className="text-left px-5 py-3 font-medium">
+                <th className="text-left px-3 sm:px-5 py-3 font-medium">
                   Last Activity
                 </th>
               </tr>
@@ -612,32 +581,32 @@ export const OccupancyUtilizationPanel: React.FC<BookingSubTabPanelProps> = ({
                     key={`${row.reservationName}-${index}`}
                     className="hover:bg-gray-50"
                   >
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {row.reservationName || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {safeNumber(row.reservationCapacity).toLocaleString()}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {safeNumber(row.totalBookings).toLocaleString()}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {safeNumber(row.unusedCapacity).toLocaleString()}
                     </td>
                     <td
-                      className={`px-5 py-4 ${occupancyRateClass(
+                      className={`px-3 sm:px-5 py-4 ${occupancyRateClass(
                         row.occupancyRate
                       )}`}
                     >
                       {row.occupancyRate}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {safeNumber(row.averageDailyUtilization).toLocaleString(
                         undefined,
                         { maximumFractionDigits: 2 }
                       )}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.lastRecordDateTime
                         ? moment(row.lastRecordDateTime).format('MMM DD, YYYY')
                         : '—'}

@@ -48,10 +48,10 @@ const ViewModal = ({
 
               {/* Content */}
               <div className="p-6">
-                <div className="grid grid-cols-1 items-center lg:grid-cols-5 gap-8">
+                <div className="grid grid-cols-1 items-center lg:grid-cols-5 gap-4 sm:gap-6">
                   {/* Main Item */}
                   <div className="lg:col-span-3">
-                    <div className="grid grid-cols-1 items-center md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 items-center md:grid-cols-2 gap-3 sm:gap-6">
                       {/* Image */}
                       <div className="space-y-4">
                         <div className="relative overflow-hidden rounded-xl ">
@@ -72,11 +72,10 @@ const ViewModal = ({
                                 : '/assets/images/no-image.svg'
                             }
                             alt={selectedMenu.name}
-                            className="w-full h-[20rem] object-cover transition-transform duration-300 hover:scale-105"
+                            className="w-full h-[8rem] sm:h-[10rem] md:h-[14rem] lg:h-[16rem] object-cover transition-transform duration-300 hover:scale-105"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = '/assets/images/no-image.svg';
                             }}
-                        
                           />
                         </div>
                       </div>
@@ -134,7 +133,7 @@ const ViewModal = ({
                                       : "text-gray-400"
                                   )}
                                 >
-                                  {formatPrice(selectedMenu.packingCost || 0)}
+                                  {formatPrice(selectedMenu.packingCost || 0, undefined as any)}
                                 </span>
                               </div>
                             </Checkbox>
@@ -369,7 +368,7 @@ const ViewModal = ({
                                                 : "text-gray-400"
                                             )}
                                           >
-                                            {formatPrice(selectedMenu.packingCost || 0)}
+                                            {formatPrice(selectedMenu.packingCost || 0, undefined as any)}
                                           </span>
                                         </div>
                                       </Checkbox>

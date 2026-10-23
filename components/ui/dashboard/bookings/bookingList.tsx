@@ -535,59 +535,139 @@ const BookingsList: React.FC<BookingsListProps> = ({
 
   return (
     <section className="border border-primaryGrey rounded-lg overflow-hidden">
-      <Table
-        radius="lg"
-        isCompact
-        removeWrapper
-        aria-label="list of bookings"
-        bottomContent={bottomContent}
-        topContent={topContent}
-        bottomContentPlacement="outside"
-        classNames={classNames}
-        selectedKeys={selectedKeys}
-        // selectionMode='multiple'
-        sortDescriptor={sortDescriptor as SortDescriptor}
-        topContentPlacement="outside"
-        onSelectionChange={setSelectedKeys as (keys: Selection) => void}
-        onSortChange={setSortDescriptor as (descriptor: SortDescriptor) => void}
-      >
-        <TableHeader columns={headerColumns}>
-          {(column) => (
-            <TableColumn
-              key={column.uid}
-              align={column.uid === "actions" ? "center" : "start"}
-              allowsSorting={column.sortable}
-            >
-              {column.name}
-            </TableColumn>
-          )}
-        </TableHeader>
-        <TableBody
-          emptyContent={"No booking(s) found"}
-          items={isDataLoading ? [] : sortedBookings}
-          isLoading={isDataLoading}
-          loadingContent={
-            <div className="flex justify-center items-center w-full h-full py-10">
+      {isMobile ? (
+        <div className="divide-y divide-primaryGrey">
+          {topContent}
+          
+          {isDataLoading && (
+            <div className="flex justify-center items-center py-16">
               <SpinnerLoader size="md" />
             </div>
-          }
-        >
-          {(booking: BookingItem) => (
-            <TableRow
+          )}
+          
+          {!isDataLoading && sortedBookings.length === 0 && (
+            <div className="flex justify-center items-center py-16 text-textGrey">
+              No booking(s) found
+            </div>
+          )}
+          
+          {!isDataLoading && sortedBookings.map((booking: BookingItem) => (
+            <article
               key={String(booking?.reference || booking?.id)}
-              className="cursor-pointer hover:bg-gray-50 transition-colors"
+              className="p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors"
               onClick={() => {
                 setBookingDetails(booking);
                 openBookingDetailsModal();
               }}
             >
-              {(columnKey) => (
-                <TableCell>{renderCell(booking, String(columnKey))}</TableCell>
+              <div className="flex items-end justify-end mb-3 mt-2">
+                <div className="ml-2" onClick={(e) => e.stopPropagation()}>
+                  {renderCell(booking, "actions")}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-black text-[15px]">
+                      {booking?.firstName} {booking?.lastName}
+                    </span>
+                  </div>
+                  <div className="text-textGrey text-[13px]">
+                    {booking?.phoneNumber}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[11px] text-textGrey uppercase mb-1">
+                    Reservation
+                  </div>
+                  <div className="text-black font-semibold text-[15px]">
+                    {booking?.reservationName}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[11px] text-textGrey uppercase mb-1">
+                    Reference
+                  </div>
+                  <div className="text-black text-[13px] truncate">
+                    {booking?.reference}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[11px] text-textGrey uppercase mb-1">
+                    Email
+                  </div>
+                  <div className="text-black text-[13px] truncate">
+                    {booking?.emailAddress}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                {renderCell(booking, "bookingStatus")}
+                {renderCell(booking, "bookingDateTime")}
+              </div>
+            </article>
+          ))}
+          {bottomContent}
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <Table
+            radius="lg"
+            isCompact
+            removeWrapper
+            aria-label="list of bookings"
+            bottomContent={bottomContent}
+            topContent={topContent}
+            bottomContentPlacement="outside"
+            classNames={classNames}
+            selectedKeys={selectedKeys}
+            // selectionMode='multiple'
+            sortDescriptor={sortDescriptor as SortDescriptor}
+            topContentPlacement="outside"
+            onSelectionChange={setSelectedKeys as (keys: Selection) => void}
+            onSortChange={setSortDescriptor as (descriptor: SortDescriptor) => void}
+          >
+            <TableHeader columns={headerColumns}>
+              {(column) => (
+                <TableColumn
+                  key={column.uid}
+                  align={column.uid === "actions" ? "center" : "start"}
+                  allowsSorting={column.sortable}
+                >
+                  {column.name}
+                </TableColumn>
               )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+            </TableHeader>
+            <TableBody
+              emptyContent={"No booking(s) found"}
+              items={isDataLoading ? [] : sortedBookings}
+              isLoading={isDataLoading}
+              loadingContent={
+                <div className="flex justify-center items-center w-full h-full py-10">
+                  <SpinnerLoader size="md" />
+                </div>
+              }
+            >
+              {(booking: BookingItem) => (
+                <TableRow
+                  key={String(booking?.reference || booking?.id)}
+                  className="cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => {
+                    setBookingDetails(booking);
+                    openBookingDetailsModal();
+                  }}
+                >
+                  {(columnKey) => (
+                    <TableCell>{renderCell(booking, String(columnKey))}</TableCell>
+                  )}
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       <EditBooking
         eachBooking={eachBooking}

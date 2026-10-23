@@ -73,15 +73,20 @@ import { isCheckoutPayment } from "../payments/data";
 import {
   completeOrder,
   completeOrderWithPayment,
-  getOrder,
 } from "@/app/api/controllers/dashboard/orders";
 import useOrderDetails from "@/hooks/cachedEndpoints/useOrderDetails";
+import { fetchOrderDetails } from "@/lib/orderDetailsCache";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import { MdKeyboardArrowRight } from "react-icons/md";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { useQueryClient } from "@tanstack/react-query";
+import { isNetworkOnline } from "@/lib/connectivity";
+import useNetworkOnline from "@/hooks/useNetworkOnline";
+import { useOfflineQueueSync } from "@/hooks/useOfflineQueueSync";
+import { getStatusForCategory, withQueuedOrders } from "@/lib/orderCategories";
+import QueuedOrderInvoice from "@/components/offline/QueuedOrderInvoice";
 
 // Type definitions
 interface OrderItem {
@@ -109,7 +114,20 @@ interface OrderItem {
   amountPaid?: number;
   isVatApplied?: boolean;
   vatRate?: number;
+  subTotalAmount?: number;
+  vatAmount?: number;
+  additionalCost?: number;
+  additionalCostName?: string;
   checkOutReference?: string;
+  /** True when the row is an offline-queued order with no server record yet. */
+  isQueued?: boolean;
+  /** Queue entry id — the handle used for edit/discard/invoice. */
+  queueId?: string;
+  /** Raw status of the underlying queue entry. */
+  queueStatus?: string;
+  /** How confident we are the server has not already received the order. */
+  delivery?: string;
+  reviewReason?: string;
 }
 
 interface OrderCategory {
@@ -146,23 +164,10 @@ const INITIAL_VISIBLE_COLUMNS = [
   "actions",
 ];
 
-// Status mapping for categories
-const getStatusForCategory = (categoryName: string): number | null => {
-  switch (categoryName.toLowerCase()) {
-    case "open orders":
-      return 0;
-    case "closed orders":
-      return 1;
-    case "cancelled orders":
-      return 2;
-    case "awaitingconfirmation orders":
-    case "awaiting confirmation orders":
-      return 3;
-    case "all orders":
-    default:
-      return null; // null means show all orders
-  }
-};
+// How many rows currently on screen get their details warmed up front (see the
+// warming effect in OrdersList) — bounded so a large page can't fire a burst of
+// requests the moment it renders.
+const WARMED_ROW_LIMIT = 25;
 
 const OrdersList: React.FC<OrdersListProps> = ({
   orders,
@@ -181,6 +186,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const pathname = usePathname();
   const { userRolePermissions, role } = usePermission();
   const queryClient = useQueryClient();
+  const isOnline = useNetworkOnline();
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const businessInformation = getJsonItemFromLocalStorage("business");
   const isPOSUserState = isPOSUser(userInformation);
@@ -207,6 +213,13 @@ const OrdersList: React.FC<OrdersListProps> = ({
     React.useState<boolean>(false);
   const [isOpenPaymentBreakdown, setIsOpenPaymentBreakdown] = React.useState<boolean>(false);
   const [isOpenDocket, setIsOpenDocket] = React.useState<boolean>(false);
+  const {
+    orders: queuedOrders,
+    items: queuedItems,
+    updateOrder: updateQueued,
+    discardOrder: discardQueued,
+  } = useOfflineQueueSync();
+  const [queuedInvoiceId, setQueuedInvoiceId] = useState<string | null>(null);
 
   // Menu categories drive the "Generate Docket" action. Sourced from the Menu
   // Controller (react-query cached); the action is hidden when none exist.
@@ -312,24 +325,102 @@ const OrdersList: React.FC<OrdersListProps> = ({
     return filteredOrders;
   }, [orders, tableStatus, searchQuery, isLoading, isPending]);
 
+  const queuedAsOrderItems = React.useMemo(() => {
+    // Payment recorded on the device while the order was queued lives on the raw
+    // entry's `local` snapshot, not on the projected view, so look it up here to
+    // keep the row's paid amount/method in step with other orders.
+    const localById = new Map(
+      queuedItems.map((i: any) => [i.id, i.local ?? {}])
+    );
+
+    return queuedOrders.map((q: any) => {
+      const local = localById.get(q.id) ?? {};
+      const amountPaid = Number(local.amountPaid) || 0;
+      return {
+        id: q.id,
+        quickResponseID: q.table || "",
+        placedByName: q.customerName || "Anonymous",
+        placedByPhoneNumber: q.customerPhone || "",
+        // No server order exists yet, so there is no real order id to show.
+        // The table renders a "Generating…" indicator for queued rows instead.
+        reference: "",
+        treatedBy: q.staffName || "",
+        totalAmount: q.totalAmount,
+        qrReference: q.table || "",
+        paymentMethod: typeof local.paymentMethod === "number" ? local.paymentMethod : 0,
+        paymentReference: local.paymentReference || "",
+        status: 0,
+        dateCreated: new Date(q.createdAt).toISOString(),
+        dateUpdated: new Date(q.createdAt).toISOString(),
+        comment: q.comment || "",
+        subTotalAmount: q.subTotalAmount,
+        vatAmount: q.vatAmount,
+        additionalCost: q.additionalCost,
+        additionalCostName: q.additionalCostName,
+        amountRemaining: Math.max(0, q.totalAmount - amountPaid),
+        amountPaid,
+        isVatApplied: q.isVatApplied ?? true,
+        vatRate: 0,
+        isQueued: true,
+        queueId: q.id,
+        queueStatus: q.status,
+        delivery: q.delivery,
+        reviewReason: q.reviewReason,
+      };
+    });
+  }, [queuedOrders, queuedItems]);
+
+  // Offline orders are open orders that exist only on this device, so they must
+  // obey the same tab (status) and search rules as server rows. Previously they
+  // were prepended to every tab, which made the selected tab look wrong.
+  const filteredQueuedOrders = React.useMemo(() => {
+    const queuedStatusFilter = getStatusForCategory(tableStatus || "All Orders");
+    // Queued rows are always status 0 (open); hide them on any other tab.
+    if (queuedStatusFilter !== null && queuedStatusFilter !== 0) {
+      return [];
+    }
+
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return queuedAsOrderItems;
+
+    return queuedAsOrderItems.filter(
+      (order) =>
+        order.placedByName.toLowerCase().includes(query) ||
+        order.reference.toLowerCase().includes(query)
+    );
+  }, [queuedAsOrderItems, tableStatus, searchQuery]);
+
+  const displayWithQueued = React.useMemo(() => {
+    return [...filteredQueuedOrders, ...orderDetails];
+  }, [filteredQueuedOrders, orderDetails]);
+
   // Create pagination data structure from props
   const paginationData = React.useMemo(() => {
     return {
-      data: orderDetails,
+      data: displayWithQueued,
       totalPages: propTotalPages,
       currentPage: propCurrentPage,
       hasNext: propHasNext,
       hasPrevious: propHasPrevious,
-      totalCount: propTotalCount,
+      totalCount: propTotalCount + filteredQueuedOrders.length,
     };
   }, [
-    orderDetails,
+    displayWithQueued,
     propCurrentPage,
     propTotalPages,
     propHasNext,
     propHasPrevious,
     propTotalCount,
+    filteredQueuedOrders.length,
   ]);
+
+  // Tab counts come from the server, which knows nothing about orders still in
+  // the device queue. Add them to the tabs they belong to (All Orders and Open
+  // Orders) so the badge matches the rows actually on screen.
+  const categoriesWithQueued = React.useMemo(
+    () => withQueuedOrders(categories, queuedAsOrderItems) ?? categories,
+    [categories, queuedAsOrderItems]
+  );
 
   const {
     headerColumns,
@@ -392,6 +483,12 @@ const OrdersList: React.FC<OrdersListProps> = ({
   };
   const toggleInvoiceModal = (order: OrderItem) => {
     setSingleOrder(order);
+    // A queued order has no server record, so the server-backed InvoiceModal
+    // would render an empty document. Render the local queue invoice instead.
+    if (order.isQueued && order.queueId) {
+      setQueuedInvoiceId(order.queueId);
+      return;
+    }
     setIsOpenInvoice(!isOpenInvoice);
   };
   const toggleUpdateOrderModal = (order: OrderItem) => {
@@ -658,19 +755,20 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
   // useEffect to update category states
   useEffect(() => {
-    const foundCategory = categories?.find(
+    const foundCategory = categoriesWithQueued?.find(
       (c: OrderCategory) =>
-        c.name === (tableStatus || categories?.[0]?.name || "All Orders")
+        c.name === (tableStatus || categoriesWithQueued?.[0]?.name || "All Orders")
     );
     const isEmpty = !!(foundCategory && foundCategory?.count === 0);
 
-    // Show loading only if we don't have data and category isn't empty
-    const hasData = orderDetails.length > 0;
+    // Show loading only if we don't have data and category isn't empty.
+    // Offline rows count as data too, otherwise the spinner can cover them.
+    const hasData = orderDetails.length > 0 || filteredQueuedOrders.length > 0;
     const showLoading = !hasData && !isEmpty && isLoading;
 
     setIsCategoryEmpty(isEmpty);
     setShouldShowLoading(showLoading);
-  }, [categories, tableStatus, isLoading, orderDetails]);
+  }, [categoriesWithQueued, tableStatus, isLoading, orderDetails, filteredQueuedOrders]);
 
   // Monitor tab changes to ensure modal states are properly managed
   useEffect(() => {
@@ -694,21 +792,42 @@ const OrdersList: React.FC<OrdersListProps> = ({
     isOpenComment,
   ]);
 
-  // Prefetch order details on hover for better performance
+  // Prefetch order details on hover for better performance.
+  //
+  // Offline the request can only fail, and the QueryClient's default retries
+  // would stack backoff timers that compete with the user's own actions — so
+  // prefetching waits for the connection and never retries. The actual reads
+  // (invoice, update, refund modals) still fetch on their own through
+  // useOrderDetails; only this speculative warm-up is skipped.
   const prefetchOrderDetails = (orderId: string) => {
+    if (!isNetworkOnline()) return;
     queryClient.prefetchQuery({
       queryKey: ["orderDetails", orderId],
-      queryFn: () => getOrder(orderId),
+      queryFn: () => fetchOrderDetails(orderId),
       staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 0, // speculative: a failed warm-up must not pile up retries
     });
   };
+
+  // Hover-only prefetching leaves most rows cold — touch devices never hover —
+  // so the rows currently on screen are warmed as well. Online only, never for
+  // rows already cached, and capped by WARMED_ROW_LIMIT. This is what makes the
+  // row actions keep working when the connection drops right after load.
+  React.useEffect(() => {
+    if (!isOnline) return;
+    orderDetails.slice(0, WARMED_ROW_LIMIT).forEach((order) => {
+      if (queryClient.getQueryData(["orderDetails", order.id])) return;
+      prefetchOrderDetails(order.id);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderDetails, isOnline]);
 
   // Fetch full order details for CheckoutModal
   const {
     orderDetails: fullOrderDetails,
     isLoading: isLoadingFullOrderDetails,
   } = useOrderDetails(singleOrder?.id, {
-    enabled: !!singleOrder?.id && isOpenCheckoutModal,
+    enabled: !!singleOrder?.id && isOpenCheckoutModal && !singleOrder?.isQueued,
   });
 
   // Transform order data to match CheckoutModal expectations (qrReference -> quickResponseID)
@@ -734,6 +853,12 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const handleRowClick = (order: OrderItem) => {
     switch (order.status) {
       case 0: // Open orders
+        // A queued order is edited from the device, never fetched, and its
+        // "add items" hand-off carries the queue id rather than a server id.
+        if (order.isQueued) {
+          toggleUpdateOrderModal(order);
+          break;
+        }
         saveJsonItemToLocalStorage("order", order);
         toggleUpdateOrderModal(order);
         break;
@@ -778,7 +903,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
         case "amount":
           return (
             <div className="text-textGrey text-sm">
-              <p>{formatPrice(order.totalAmount)}</p>
+              <p>{formatPrice(order.totalAmount, undefined as any)}</p>
             </div>
           );
         case "amountRemaining":
@@ -786,15 +911,34 @@ const OrdersList: React.FC<OrdersListProps> = ({
             <div className={`text-sm ${order.amountRemaining !== undefined && order.amountRemaining < 0 ? "text-red-500" : "text-textGrey"}`}>
               <p>
                 {order.amountRemaining !== undefined
-                  ? formatPrice(order.amountRemaining)
+                  ? formatPrice(order.amountRemaining, undefined as any)
                   : "-"}
               </p>
             </div>
           );
         case "orderID":
+          if (order.isQueued) {
+            return (
+              <div className="text-textGrey text-sm">Generating…</div>
+            );
+          }
           return <div className="text-textGrey text-sm">{order.reference}</div>;
 
         case "status":
+          // Queued rows are neither server-open nor awaiting confirmation — they
+          // live only on this device — so they get an amber "Queued" badge.
+          if (order.isQueued) {
+            return (
+              <Chip
+                className="capitalize"
+                color="warning"
+                size="sm"
+                variant="flat"
+              >
+                Queued
+              </Chip>
+            );
+          }
           return (
             <Chip
               className="capitalize"
@@ -822,7 +966,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                 aria-label="drop down"
                 className=""
                 onOpenChange={(isOpen) => {
-                  if (isOpen) {
+                  if (isOpen && !order.isQueued) {
                     prefetchOrderDetails(order.id);
                   }
                 }}
@@ -847,7 +991,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                       </div>
                     </DropdownItem>
 
-                    {(order.status === 0 || order.status === 3) && (
+                    {!order.isQueued && (order.status === 0 || order.status === 3) && (
                       <DropdownItem
                         key="progress"
                         onClick={() => toggleProgressModal(order)}
@@ -861,7 +1005,8 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     )}
 
                     {
-                      ((role === 0 ||
+                      (!order.isQueued &&
+                        (role === 0 ||
                         isPOSUserState ||
                         userRolePermissions?.canEditOrder === true) &&
                         options &&
@@ -879,7 +1024,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                         )) as any
                     }
 
-                    {isCheckoutPayment(order.paymentMethod) && (
+                    {!order.isQueued && isCheckoutPayment(order.paymentMethod) && (
                       <DropdownItem
                         key="payment-status"
                         onClick={() => togglePaymentBreakdownModal(order)}
@@ -892,19 +1037,22 @@ const OrdersList: React.FC<OrdersListProps> = ({
                       </DropdownItem>
                     )}
 
-                    <DropdownItem
-                      key="generate-docket"
-                      onClick={() => toggleDocketModal(order)}
-                      aria-label="Generate Docket"
-                    >
-                      <div className="flex gap-3 items-center text-grey500">
-                        <ClipboardList className="w-[18px] h-[18px]" />
-                        <p>Generate Docket</p>
-                      </div>
-                    </DropdownItem>
+                    {!order.isQueued && (
+                      <DropdownItem
+                        key="generate-docket"
+                        onClick={() => toggleDocketModal(order)}
+                        aria-label="Generate Docket"
+                      >
+                        <div className="flex gap-3 items-center text-grey500">
+                          <ClipboardList className="w-[18px] h-[18px]" />
+                          <p>Generate Docket</p>
+                        </div>
+                      </DropdownItem>
+                    )}
 
                     {
-                      ((role === 0 ||
+                      (!order.isQueued &&
+                        (role === 0 ||
                         isPOSUserState ||
                         userRolePermissions?.canEditOrder === true) &&
                         options &&
@@ -923,7 +1071,8 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     }
 
                     {
-                      (role === 0 &&
+                      (!order.isQueued &&
+                        role === 0 &&
                         options &&
                         options.includes("Refund Order") && (
                           <DropdownItem
@@ -939,7 +1088,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                         )) as any
                     }
 
-                    {options && options.includes("Order History") && (
+                    {!order.isQueued && options && options.includes("Order History") && (
                       <DropdownItem
                         key="order-history"
                         onClick={() => toggleHistoryModal(order)}
@@ -953,9 +1102,10 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     )}
 
                     {
-                      (role === 0 &&
-                        options &&
-                        options.includes("Cancel Order") && (
+                      (order.isQueued ||
+                        (role === 0 &&
+                          options &&
+                          options.includes("Cancel Order"))) && (
                           <DropdownItem
                             key="cancel"
                             onClick={() => toggleCancelModal(order)}
@@ -969,7 +1119,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                               <p>Cancel order</p>
                             </div>
                           </DropdownItem>
-                        )) as any
+                        )
                     }
                   </DropdownSection>
                 </DropdownMenu>
@@ -986,12 +1136,12 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const topContent = React.useMemo(() => {
     return (
       <Filters
-        orders={categories}
+        orders={categoriesWithQueued}
         handleTabClick={handleTabClick}
         selectedCategory={tableStatus || "All Orders"}
       />
     );
-  }, [categories, tableStatus, handleTabClick]);
+  }, [categoriesWithQueued, tableStatus, handleTabClick]);
 
   // Loading states are now managed in useEffect above
 
@@ -1028,7 +1178,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                 key={order.id}
                 className="p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors"
                 onClick={() => handleRowClick(order)}
-                onMouseEnter={() => prefetchOrderDetails(order.id)}
+                onMouseEnter={() => !order.isQueued && prefetchOrderDetails(order.id)}
               >
                 {/* Header: Name + Phone + Comment */}
                 <div className="flex items-end justify-end  mb-3 mt-2">
@@ -1037,7 +1187,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     <Dropdown
                       aria-label="order actions"
                       onOpenChange={(isOpen) => {
-                        if (isOpen) {
+                        if (isOpen && !order.isQueued) {
                           prefetchOrderDetails(order.id);
                         }
                       }}
@@ -1059,7 +1209,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                               <p>Generate invoice</p>
                             </div>
                           </DropdownItem>
-                          {(order.status === 0 || order.status === 3) && (
+                          {!order.isQueued && (order.status === 0 || order.status === 3) && (
                             <DropdownItem
                               key="progress"
                               onClick={() => toggleProgressModal(order)}
@@ -1071,18 +1221,20 @@ const OrdersList: React.FC<OrdersListProps> = ({
                               </div>
                             </DropdownItem>
                           )}
-                          <DropdownItem
-                            key="payment-summary"
-                            onClick={() => togglePaymentSummaryModal(order)}
-                            aria-label="Payment Summary"
-                          >
-                            <div className="flex gap-3 items-center text-grey500">
-                              <Receipt className="w-[18px] h-[18px]" />
-                              <p>Payment Summary</p>
-                            </div>
-                          </DropdownItem>
+                          {!order.isQueued && (
+                            <DropdownItem
+                              key="payment-summary"
+                              onClick={() => togglePaymentSummaryModal(order)}
+                              aria-label="Payment Summary"
+                            >
+                              <div className="flex gap-3 items-center text-grey500">
+                                <Receipt className="w-[18px] h-[18px]" />
+                                <p>Payment Summary</p>
+                              </div>
+                            </DropdownItem>
+                          )}
 
-                          {isCheckoutPayment(order.paymentMethod) && (
+                          {!order.isQueued && isCheckoutPayment(order.paymentMethod) && (
                             <DropdownItem
                               key="payment-status"
                               onClick={() => togglePaymentBreakdownModal(order)}
@@ -1095,19 +1247,22 @@ const OrdersList: React.FC<OrdersListProps> = ({
                             </DropdownItem>
                           )}
 
-                          <DropdownItem
-                            key="generate-docket"
-                            onClick={() => toggleDocketModal(order)}
-                            aria-label="Generate Docket"
-                          >
-                            <div className="flex gap-3 items-center text-grey500">
-                              <ClipboardList className="w-[18px] h-[18px]" />
-                              <p>Generate Docket</p>
-                            </div>
-                          </DropdownItem>
+                          {!order.isQueued && (
+                            <DropdownItem
+                              key="generate-docket"
+                              onClick={() => toggleDocketModal(order)}
+                              aria-label="Generate Docket"
+                            >
+                              <div className="flex gap-3 items-center text-grey500">
+                                <ClipboardList className="w-[18px] h-[18px]" />
+                                <p>Generate Docket</p>
+                              </div>
+                            </DropdownItem>
+                          )}
 
                           {
-                            ((role === 0 ||
+                            (!order.isQueued &&
+                              (role === 0 ||
                               isPOSUserState ||
                               userRolePermissions?.canEditOrder === true) &&
                               availableOptions[statusDataMap[order.status]] &&
@@ -1127,7 +1282,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                               )) as any
                           }
 
-                          {role === 0 &&
+                          {!order.isQueued && role === 0 &&
                             availableOptions[statusDataMap[order.status]] &&
                             availableOptions[
                               statusDataMap[order.status]
@@ -1144,7 +1299,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                               </DropdownItem>
                             )}
 
-                          {availableOptions[statusDataMap[order.status]]?.includes("Order History") && (
+                          {!order.isQueued && availableOptions[statusDataMap[order.status]]?.includes("Order History") && (
                             <DropdownItem
                               key="order-history"
                               onClick={() => toggleHistoryModal(order)}
@@ -1158,11 +1313,12 @@ const OrdersList: React.FC<OrdersListProps> = ({
                           )}
 
                           {
-                            (role === 0 &&
-                              availableOptions[statusDataMap[order.status]] &&
-                              availableOptions[
-                                statusDataMap[order.status]
-                              ].includes("Cancel Order") && (
+                            (order.isQueued ||
+                              (role === 0 &&
+                                availableOptions[statusDataMap[order.status]] &&
+                                availableOptions[
+                                  statusDataMap[order.status]
+                                ].includes("Cancel Order"))) && (
                                 <DropdownItem
                                   key="cancel"
                                   onClick={() => toggleCancelModal(order)}
@@ -1173,7 +1329,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                                     <p>Cancel order</p>
                                   </div>
                                 </DropdownItem>
-                              )) as any
+                              )
                           }
                         </DropdownSection>
                       </DropdownMenu>
@@ -1210,7 +1366,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                       Amount
                     </div>
                     <div className="text-black font-semibold text-[15px]">
-                      {formatPrice(order.totalAmount)}
+                      {formatPrice(order.totalAmount, undefined as any)}
                     </div>
                   </div>
                   <div>
@@ -1226,21 +1382,32 @@ const OrdersList: React.FC<OrdersListProps> = ({
                       Order ID
                     </div>
                     <div className="text-black text-[13px] truncate">
-                      {order.reference}
+                      {order.isQueued ? "Generating…" : order.reference}
                     </div>
                   </div>
                 </div>
 
                 {/* Status + Date */}
                 <div className="flex items-center justify-between">
-                  <Chip
-                    className="capitalize"
-                    color={statusColorMap[order.status]}
-                    size="sm"
-                    variant="bordered"
-                  >
-                    {statusDataMap[order.status]}
-                  </Chip>
+                  {order.isQueued ? (
+                    <Chip
+                      className="capitalize"
+                      color="warning"
+                      size="sm"
+                      variant="flat"
+                    >
+                      Queued
+                    </Chip>
+                  ) : (
+                    <Chip
+                      className="capitalize"
+                      color={statusColorMap[order.status]}
+                      size="sm"
+                      variant="bordered"
+                    >
+                      {statusDataMap[order.status]}
+                    </Chip>
+                  )}
                   <div className="text-textGrey text-[12px]">
                     {moment(order.dateUpdated).format("MMM DD, YYYY h:mm A")}
                   </div>
@@ -1305,7 +1472,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                   key={String(order?.id)}
                   className="cursor-pointer hover:bg-gray-50 transition-colors"
                   onClick={() => handleRowClick(order)}
-                  onMouseEnter={() => prefetchOrderDetails(order.id)}
+                  onMouseEnter={() => !order.isQueued && prefetchOrderDetails(order.id)}
                 >
                   {(columnKey) => (
                     <TableCell>
@@ -1328,6 +1495,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
         singleOrder={singleOrder}
         isOpenCancelOrder={isOpenCancelOrder}
         toggleCancelModal={toggleCancelModal}
+        discardQueued={discardQueued}
       />
       <ConfirmOrderModal
         refetch={refetch}
@@ -1376,7 +1544,10 @@ const OrdersList: React.FC<OrdersListProps> = ({
         onOpenChange={() => setIsOpenCheckoutModal(false)}
         selectedItems={checkoutSelectedItems}
         orderDetails={transformedOrderDetails}
-        id={singleOrder?.id}
+        id={singleOrder?.isQueued ? undefined : singleOrder?.id}
+        isQueued={singleOrder?.isQueued}
+        queueId={singleOrder?.queueId}
+        onQueuedEdit={updateQueued}
         onOrderSuccess={refetch}
         handleDecrement={(itemId: string) => {
           setCheckoutSelectedItems((prev) =>
@@ -1438,7 +1609,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     <span className="text-black">Select payment method</span>
                   </div>
                   <p className="text-sm text-primaryColor xl:mb-8 w-full mb-4">
-                    {formatPrice(singleOrder?.totalAmount || 0)}
+                    {formatPrice(singleOrder?.totalAmount || 0, undefined as any)}
                   </p>
                 </div>
               </div>
@@ -1587,7 +1758,8 @@ const OrdersList: React.FC<OrdersListProps> = ({
                           (singleOrder?.amountRemaining ??
                             singleOrder?.totalAmount ??
                             0) - (Number(amountPaid.replace(/,/g, "")) || 0)
-                        )
+                        ),
+                        undefined as any
                       )}
                     </span>
                   </div>
@@ -1669,6 +1841,14 @@ const OrdersList: React.FC<OrdersListProps> = ({
           (singleOrder as any)?.checkoutReference || 
           singleOrder?.qrReference || 
           singleOrder?.reference || 
+          null
+        }
+      />
+      <QueuedOrderInvoice
+        isOpen={!!queuedInvoiceId}
+        onClose={() => setQueuedInvoiceId(null)}
+        order={
+          queuedOrders.find((queuedOrder) => queuedOrder.id === queuedInvoiceId) ??
           null
         }
       />

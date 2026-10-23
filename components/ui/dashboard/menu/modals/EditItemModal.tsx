@@ -232,19 +232,19 @@ const EditItemModal = ({
       <ModalContent className="bg-white rounded-2xl shadow-2xl border border-gray-200">
         {() => (
           <>
-            <ModalBody className="p-8">
+            <ModalBody className="p-3 sm:p-6 lg:p-8">
               <div className="bg-white rounded-2xl w-full max-h-[90vh] overflow-y-auto">
                 {/* Enhanced Header */}
                
                 <div className="">
 
-                <div className="grid grid-cols-2  gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                   {/* Left Column */}
                   <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border border-gray-100">
                       <div className="flex items-center gap-2 mb-4">
                         <Edit className="w-5 h-5 text-[#5F35D2]" />
-                        <h3 className="text-lg font-semibold text-gray-800">Edit Menu Item</h3>
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-800">Edit Menu Item</h3>
                       </div>
 
                       <div className="space-y-4">
@@ -256,7 +256,7 @@ const EditItemModal = ({
                             <select
                               value={selectedMenuType}
                               onChange={(e) => setSelectedMenuType(e.target.value)}
-                              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
+                              className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
                             >
                               <option value="">Choose a Menu</option>
                               {menuSections.map((section) => (
@@ -282,7 +282,7 @@ const EditItemModal = ({
                             value={itemName}
                             onChange={(e) => setItemName(e.target.value)}
                             placeholder="Enter item name"
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+                            className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
                           />
                         </div>
 
@@ -297,7 +297,7 @@ const EditItemModal = ({
                               value={itemPrice}
                               onChange={(e) => setItemPrice(e.target.value)}
                               placeholder="0.00"
-                              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+                              className="w-full pl-10 pr-3 py-2.5 sm:pl-10 sm:pr-4 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
                             />
                           </div>
                         </div>
@@ -313,7 +313,7 @@ const EditItemModal = ({
                               onChange={(e) => setItemQuantity(e.target.value)}
                               placeholder="Optional"
                               min="0"
-                              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+                              className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
                             />
                             {itemQuantity && (selectedItem?.unitName || selectedItem?.unitCode) && (
                               <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-[#667085] font-medium">
@@ -332,7 +332,7 @@ const EditItemModal = ({
                             onChange={(e) => setItemDescription(e.target.value)}
                             placeholder="Describe your item..."
                             rows={4}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] resize-none text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+                            className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] resize-none text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
                           />
                         </div>
                       </div>
@@ -341,10 +341,10 @@ const EditItemModal = ({
 
                   {/* Right Column */}
                   <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border border-gray-100">
                       <div className="flex items-center gap-2 mb-4">
                         <Upload className="w-5 h-5 text-[#5F35D2]" />
-                        <h3 className="text-lg font-semibold text-gray-800">Item Image</h3>
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-800">Item Image</h3>
                       </div>
 
                       <div
@@ -437,10 +437,10 @@ const EditItemModal = ({
                 </div>
 
                 {/* Modal Actions */}
-                <div className="flex justify-end gap-4 p-6">
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:gap-4 p-3 sm:p-6">
                   <button
                     onClick={() => onOpenChange(false)}
-                    className="px-8 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 font-semibold transition-all duration-200 transform hover:scale-105"
+                    className="px-3 sm:px-8 py-2 sm:py-3 border w-full sm:w-auto border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 font-semibold transition-all duration-200 transform hover:scale-105"
                     disabled={loading}
                   >
                     Cancel
@@ -448,7 +448,7 @@ const EditItemModal = ({
                   <button
                     onClick={handleUpdateItem}
                     disabled={loading || !itemName || !itemPrice || !selectedMenuType}
-                    className="px-8 py-3 bg-[#5F35D2]  text-white rounded-xl hover:from-[#5F35D2]/90 hover:to-[#7C69D8]/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    className="px-3 sm:px-8 py-2 sm:py-3 bg-[#5F35D2]  text-white rounded-xl hover:from-[#5F35D2]/90 hover:to-[#7C69D8]/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl w-full sm:w-auto"
                   >
                     {loading ? (
                       <div className="flex items-center gap-2">

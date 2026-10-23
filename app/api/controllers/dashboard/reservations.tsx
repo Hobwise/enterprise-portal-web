@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { DASHBOARD } from "../../api-url";
 import api, { handleError } from "../../apiService";
+import { isOfflineFailure } from "@/lib/offlineQueue";
+import { submitWithQueue } from "@/lib/submitWithQueue";
 import axios from "axios";
 
 export type payloadReservationItem = {
@@ -58,6 +60,10 @@ export async function getReservations(
 
     return data;
   } catch (error) {
+    // Surface network-level failures (offline, DNS, timeout) so pages can
+    // serve cached data or show a retry instead of a silent empty list.
+    // Server (HTTP) errors keep the existing behavior.
+    if (isOfflineFailure(error)) throw error;
     handleError(error, false);
   }
 }
@@ -98,11 +104,19 @@ export async function createReservations(
   const headers = businessId ? { businessId } : {};
 
   try {
-    const data = await api.post(DASHBOARD.reservation, payload, {
+    const result = await submitWithQueue<any>({
+      kind: 'reservation',
+      url: DASHBOARD.reservation,
+      payload,
       headers,
     });
 
-    return data;
+    if (result.status === 'sent') return result.data;
+    if (result.status === 'queued') {
+      return { queued: true, queueId: result.queueId };
+    }
+
+    handleError(result.error);
   } catch (error) {
     handleError(error);
   }

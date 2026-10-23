@@ -2,12 +2,18 @@
 
 import React, { useMemo, useState } from 'react';
 import moment from 'moment';
-import { Button, Skeleton } from '@nextui-org/react';
-import { FiDownload } from 'react-icons/fi';
+import { Skeleton } from '@nextui-org/react';
 import { formatPrice } from '@/lib/utils';
-import { BarList, SortableTH, StatCards, useTableSort } from './SharedPanels';
+import {
+  BarList,
+  reportTableClass,
+  SortableTH,
+  StatCards,
+  useTableSort,
+} from './SharedPanels';
 import { TablePagination } from './SalesPanels';
-import { ExportType } from './exportHelpers';
+import { ExportType, ExportTypeValue } from './exportHelpers';
+import ExportButtons from './ExportButtons';
 import {
   BarRow,
   OrderReportItem,
@@ -37,7 +43,7 @@ interface QrPanelProps {
   data?: QrReportResponse;
   isLoading?: boolean;
   onExport?: (exportType: number) => void | Promise<void>;
-  isExporting?: boolean;
+  exportingType?: ExportTypeValue | null;
 }
 
 const Skeletonized: React.FC = () => (
@@ -51,37 +57,6 @@ const Skeletonized: React.FC = () => (
   </div>
 );
 
-interface ExportButtonsProps {
-  onExportExcel?: () => void;
-  onExportPdf?: () => void;
-  isLoading?: boolean;
-}
-
-const ExportButtons: React.FC<ExportButtonsProps> = ({
-  onExportExcel,
-  onExportPdf,
-  isLoading,
-}) => (
-  <div className="flex items-center gap-2 px-5 py-4">
-    <Button
-      variant="bordered"
-      onPress={onExportExcel}
-      isLoading={isLoading}
-      startContent={isLoading ? null : <FiDownload size={14} />}
-      className="border border-gray-200 text-gray-700 bg-white rounded-lg text-xs h-9"
-    >
-      Export Excel
-    </Button>
-    <Button
-      onPress={onExportPdf}
-      isLoading={isLoading}
-      startContent={isLoading ? null : <FiDownload size={14} />}
-      className="bg-primaryColor text-white rounded-lg text-xs h-9"
-    >
-      Export PDF
-    </Button>
-  </div>
-);
 
 const buildExportHandlers = (
   onExport?: (exportType: number) => void | Promise<void>
@@ -311,7 +286,7 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -378,7 +353,7 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({
   return (
     <div className="flex flex-col gap-5">
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               Quick Response Details
@@ -399,10 +374,10 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({
               <option value="inactive">Inactive ({counts.inactive})</option>
             </select>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(7)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -469,26 +444,26 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({
               ) : (
                 pageRows.map((row) => (
                   <tr key={row.qrName} className="hover:bg-gray-50">
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {row.qrName}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.orders.toLocaleString()}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.openOrders.toLocaleString()}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {formatNgn(row.averageValue)}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {formatNgn(row.netRevenue)}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.refunds.toLocaleString()}
                     </td>
                     <td
-                      className={`px-5 py-4 font-medium ${
+                      className={`px-3 sm:px-5 py-4 font-medium ${
                         row.status === 'Active'
                           ? 'text-emerald-600'
                           : 'text-red-500'
@@ -527,7 +502,7 @@ export const QrOrderHistoryPanel: React.FC<QrPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [page, setPage] = useState(1);
   const exportHandlers = buildExportHandlers(onExport);
@@ -569,7 +544,7 @@ export const QrOrderHistoryPanel: React.FC<QrPanelProps> = ({
   return (
     <div className="flex flex-col gap-5">
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               Quick Response Order History
@@ -578,10 +553,10 @@ export const QrOrderHistoryPanel: React.FC<QrPanelProps> = ({
               {rows.length.toLocaleString()} orders
             </span>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(7)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -651,25 +626,25 @@ export const QrOrderHistoryPanel: React.FC<QrPanelProps> = ({
                     key={`${row.orderId}-${idx}`}
                     className="hover:bg-gray-50"
                   >
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {row.orderId || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.customerName || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.quickResponseName || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.paymentMethod || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {formatNgn(safeNumber(row.totalAmount))}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.orderStatus || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.dateCreated
                         ? moment(row.dateCreated).format('DD MMM YYYY HH:mm')
                         : '—'}
@@ -704,7 +679,7 @@ export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [page, setPage] = useState(1);
   const exportHandlers = buildExportHandlers(onExport);
@@ -814,7 +789,7 @@ export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
       )}
 
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               Revenue by Quick Response
@@ -823,10 +798,10 @@ export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
               {performance.length.toLocaleString()} Quick Responses
             </span>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(6)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -886,22 +861,22 @@ export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
               ) : (
                 pageRows.map((row, idx) => (
                   <tr key={`${row.qrName}-${idx}`} className="hover:bg-gray-50">
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {row.qrName ?? '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {formatNgn(safeNumber(row.netRevenue))}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {safeNumber(row.orderCount).toLocaleString()}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {formatNgn(safeNumber(row.averageOrderValue))}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {formatNgn(safeNumber(row.refundAmount))}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.lastOrderDateTime
                         ? moment(row.lastOrderDateTime).format('DD MMM YYYY')
                         : '—'}
@@ -930,7 +905,7 @@ export const QrActivityTimelinePanel: React.FC<QrPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [page, setPage] = useState(1);
   const exportHandlers = buildExportHandlers(onExport);
@@ -976,7 +951,7 @@ export const QrActivityTimelinePanel: React.FC<QrPanelProps> = ({
   return (
     <div className="flex flex-col gap-5">
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               Quick Response Activity Timeline
@@ -985,10 +960,10 @@ export const QrActivityTimelinePanel: React.FC<QrPanelProps> = ({
               {rows.length.toLocaleString()} events
             </span>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(4)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -1039,19 +1014,19 @@ export const QrActivityTimelinePanel: React.FC<QrPanelProps> = ({
                     key={`${row.qrName}-${row.occurredAt}-${idx}`}
                     className="hover:bg-gray-50"
                   >
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.occurredAt
                         ? moment(row.occurredAt).format('DD MMM YYYY HH:mm')
                         : '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {row.qrName ?? '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.eventType ?? '—'}
                     </td>
                     {hasAmount && (
-                      <td className="px-5 py-4 text-gray-700">
+                      <td className="px-3 sm:px-5 py-4 text-gray-700">
                         {row.amount !== undefined && row.amount !== null
                           ? formatNgn(safeNumber(row.amount))
                           : '—'}

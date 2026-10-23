@@ -21,7 +21,7 @@ export const NavigationBanner = ({
   desc,
 }: {
   title: string;
-  desc: string | React.ReactNode;
+  desc?: string | React.ReactNode;
 }) => {
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(true);
@@ -37,28 +37,28 @@ export const NavigationBanner = ({
   if (!mounted || !isVisible) return null;
 
   return (
-    <div className='bg-amber-50 border border-amber-100 px-4 py-3 flex items-center gap-3 justify-between mx-auto relative'>
-      <div className='flex items-center space-x-3'>
-        <div className='w-10 h-10  rounded-full shadow-lg flex items-center justify-center text-amber-900 text-2xl font-medium'>
+    <div className='relative mx-auto flex flex-col items-start gap-3 bg-amber-50 border border-amber-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'>
+      <div className='flex w-full items-start gap-3 sm:w-auto sm:min-w-0 sm:flex-1 sm:items-center'>
+        <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-2xl font-medium text-amber-900 shadow-lg'>
           <LuShieldAlert />
         </div>
-        <div className='flex flex-col'>
-          <span className='text-amber-800 font-medium'>{title}</span>
-          <div className='text-amber-600'>{desc}</div>
+        <div className='flex min-w-0 flex-col'>
+          <span className='text-sm font-medium text-amber-800 sm:text-base'>{title}</span>
+          <div className='text-sm leading-snug text-amber-600 sm:text-base'>{desc}</div>
         </div>
       </div>
-      <div className='flex items-center gap-3'>
+      <div className='flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end'>
         {userInfo?.isOwner && (
           <Button
             onClick={() => router.push('/dashboard/settings/subscriptions')}
-            className='px-6 py-1.5 rounded-md text-sm font-medium bg-[#D7A913] text-white relative group'
+            className='relative group shrink-0 whitespace-nowrap bg-[#D7A913] px-5 py-1.5 text-sm font-medium text-white rounded-md'
           >
             Upgrade
           </Button>
         )}
         <button
           onClick={() => setIsVisible(false)}
-          className='text-amber-600  transition-colors'
+          className='text-amber-600 shrink-0 transition-colors'
           aria-label='Close banner'
         >
           <IoClose size={24} />
@@ -162,14 +162,14 @@ export const SubscriptionNoticePopup = () => {
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalBody className='text-black md:p-10 p-8 space-y-4'>
+            <ModalBody className='text-black md:p-10 p-6 sm:p-8 space-y-4'>
               <div className='w-full grid place-content-center'>
                 <div className='bg-[#ffebca] h-[60px] grid place-content-center rounded-full  w-[60px]'>
                   <CiWarning className='text-[#F4B23E] font-3xl text-[35px]' />
                 </div>
               </div>
               <div>
-                <p className='font-bold text text-[20px] mb-2 text-center'>
+                <p className='font-bold text text-lg sm:text-[20px] mb-2 text-center'>
                   Subscription Expiry Notice!
                 </p>
                 <div className='flex justify-center items-center'>

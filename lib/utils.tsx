@@ -24,6 +24,7 @@ import { saveAs } from "file-saver";
 
 import LoadingAvatar from "../public/assets/images/loadingAvatar.svg";
 import { companyInfo } from "./companyInfo";
+import { clearPersistentCaches } from "./persistentCache";
 import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
 import { RefObject } from "react";
@@ -50,6 +51,50 @@ export const getFromLocalStorage = (name: string) => {
 export const clearItemLocalStorage = (name: string) => {
   return typeof window !== "undefined" ? localStorage.removeItem(name) : false;
 };
+
+/**
+ * Storage key prefixes that must survive a logout/login wipe.
+ *
+ * PostHog stores `$device_id`, `$user_id` and `$isidentified` in localStorage
+ * under `ph_*`. Blanket `localStorage.clear()` throws those away, so every
+ * sign-in starts from a brand new anonymous id and the pre-login journey
+ * (pageviews, clicks) can never be merged into the identified person.
+ */
+const PRESERVED_STORAGE_PREFIXES = [
+  "ph_",
+  "posthog",
+  "__ph",
+  // Offline submission queue must survive logout: a 401 wiping the session
+  // mid-flush would otherwise destroy queues created by anonymous customers.
+  "pendingSubmissions",
+];
+
+/**
+ * Clears app auth state without destroying the analytics identity, so an
+ * anonymous visitor that signs in is merged into one continuous person.
+ */
+export const clearAppStorage = (): void => {
+  if (typeof window === "undefined") return;
+
+  const preserved: Record<string, string | null> = {};
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (key && PRESERVED_STORAGE_PREFIXES.some((p) => key.startsWith(p))) {
+      preserved[key] = localStorage.getItem(key);
+    }
+  }
+
+  localStorage.clear();
+
+  for (const [key, value] of Object.entries(preserved)) {
+    if (value !== null) localStorage.setItem(key, value);
+  }
+
+  // Caches are hydrated into module scope, so wiping localStorage alone would
+  // leave the previous session's menu/orders data live until a reload.
+  clearPersistentCaches();
+};
+
 export const getJsonItemFromLocalStorage = (name: string) => {
   if (typeof window === "undefined") return false;
   const item = localStorage.getItem(name);
@@ -457,13 +502,43 @@ export const printPDF = async (
       const newTab = window.open(url, "_blank");
       if (newTab) {
         newTab.focus();
+        let printCompleted = false;
 
-        newTab.onload = () => {
-          if (newTab) {
-            newTab.print();
-            URL.revokeObjectURL(url);
+        const onLoadHandler = () => {
+          if (!printCompleted) {
+            printCompleted = true;
+            if (newTab) {
+              newTab.print();
+              URL.revokeObjectURL(url);
+            }
           }
         };
+
+        const onErrorHandler = () => {
+          if (!printCompleted) {
+            printCompleted = true;
+            if (newTab) {
+              newTab.print();
+              URL.revokeObjectURL(url);
+            }
+          }
+        };
+
+        const timeoutId = setTimeout(() => {
+          if (!printCompleted) {
+            printCompleted = true;
+            if (newTab) {
+              newTab.print();
+              URL.revokeObjectURL(url);
+            }
+          }
+        }, 3000);
+
+        newTab.onload = () => {
+          clearTimeout(timeoutId);
+          onLoadHandler();
+        };
+        newTab.onerror = onErrorHandler;
       }
     });
 };
@@ -599,9 +674,11 @@ export function formatDate(dateString: string) {
 
 export function resetLoginInfo() {
   try {
-    // Clear all storage
+    // Clear auth state, but keep the PostHog identity (see clearAppStorage).
+    // This runs on every 401/403, so a blanket clear would split one returning
+    // user across a fresh anonymous id each time their session expired.
     sessionStorage.clear();
-    localStorage.clear();
+    clearAppStorage();
 
     // Remove specific cookies that might persist
     removeCookie("token");

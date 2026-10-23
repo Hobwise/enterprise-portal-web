@@ -57,12 +57,12 @@ const Compaigns: React.FC = () => {
 
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-row items-center flex-wrap gap-3 w-full md:w-auto mt-4 md:mt-0">
           {/* Always show search input */ true && (
             <>
-              <div>
+              <div className="flex-1 w-full md:w-auto min-w-[150px]">
                 <CustomInput
-                  classnames={"w-[242px]"}
+                  classnames={"w-full md:w-[242px]"}
                   label=""
                   size="md"
                   value={searchQuery}

@@ -2,19 +2,20 @@
 
 import React, { useMemo, useState } from 'react';
 import moment from 'moment';
-import { Button, Skeleton } from '@nextui-org/react';
-import { FiDownload } from 'react-icons/fi';
+import { Skeleton } from '@nextui-org/react';
 import { formatPrice } from '@/lib/utils';
 import {
   BarList,
   DistributionDonut,
   DistributionSegment,
+  reportTableClass,
   SortableTH,
   StatCards,
   useTableSort,
 } from './SharedPanels';
 import { TablePagination } from './SalesPanels';
-import { ExportType } from './exportHelpers';
+import { ExportType, ExportTypeValue } from './exportHelpers';
+import ExportButtons from './ExportButtons';
 import {
   BarRow,
   CategoryPerformanceItem,
@@ -52,40 +53,9 @@ interface SalesSubTabPanelProps {
   data?: OrderReportResponse;
   isLoading?: boolean;
   onExport?: (exportType: number) => void | Promise<void>;
-  isExporting?: boolean;
+  exportingType?: ExportTypeValue | null;
 }
 
-interface ExportButtonsProps {
-  onExportExcel?: () => void;
-  onExportPdf?: () => void;
-  isLoading?: boolean;
-}
-
-const ExportButtons: React.FC<ExportButtonsProps> = ({
-  onExportExcel,
-  onExportPdf,
-  isLoading,
-}) => (
-  <div className="flex gap-2">
-    <Button
-      variant="bordered"
-      onPress={onExportExcel}
-      isLoading={isLoading}
-      startContent={isLoading ? null : <FiDownload size={14} />}
-      className="border border-gray-200 text-gray-700 bg-white rounded-lg text-xs h-9"
-    >
-      Export Excel
-    </Button>
-    <Button
-      onPress={onExportPdf}
-      isLoading={isLoading}
-      startContent={isLoading ? null : <FiDownload size={14} />}
-      className="bg-primaryColor text-white rounded-lg text-xs h-9"
-    >
-      Export PDF
-    </Button>
-  </div>
-);
 
 const buildExportHandlers = (
   onExport?: (exportType: number) => void | Promise<void>
@@ -137,7 +107,7 @@ export const OrdersVolumesPanel: React.FC<SalesSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [statusTab, setStatusTab] = useState<
     'all' | 'open' | 'closed' | 'awaiting' | 'cancelled'
@@ -238,7 +208,7 @@ export const OrdersVolumesPanel: React.FC<SalesSubTabPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               Order Value
@@ -262,10 +232,10 @@ export const OrdersVolumesPanel: React.FC<SalesSubTabPanelProps> = ({
               </option>
             </select>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(8)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -339,29 +309,29 @@ export const OrdersVolumesPanel: React.FC<SalesSubTabPanelProps> = ({
               ) : (
                 pageRows.map((order) => (
                   <tr key={order.orderId} className="hover:bg-gray-50">
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {moment(order.dateCreated).format('MMM DD, hh:mma')}
                     </td>
-                    <td className="px-5 py-4 text-gray-700 font-mono text-xs">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700 font-mono text-xs">
                       {order.orderId}
                     </td>
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {order.customerName || 'anonymous'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {order.quickResponseName || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {order.treatedBy || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {order.paymentMethod || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-900 font-semibold">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-semibold">
                       {order.totalAmount}
                     </td>
                     <td
-                      className={`px-5 py-4 font-medium ${orderStatusClass(
+                      className={`px-3 sm:px-5 py-4 font-medium ${orderStatusClass(
                         order.orderStatus
                       )}`}
                     >
@@ -389,7 +359,7 @@ export const PopularItemsPanel: React.FC<SalesSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [page, setPage] = useState(1);
   const [menuFilter, setMenuFilter] = useState<string>('all');
@@ -538,7 +508,7 @@ export const PopularItemsPanel: React.FC<SalesSubTabPanelProps> = ({
         )}
       </div>
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               All items Order Volumes
@@ -565,10 +535,10 @@ export const PopularItemsPanel: React.FC<SalesSubTabPanelProps> = ({
               )}
             </select>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(8)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -645,29 +615,29 @@ export const PopularItemsPanel: React.FC<SalesSubTabPanelProps> = ({
                     key={`${i.itemName}-${index}`}
                     className="hover:bg-gray-50"
                   >
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {i.itemName}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {i.menuName || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {safeNumber(i.totalQuantitySold).toLocaleString()}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {i.currentPrice}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {i.netSalesAmount}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {i.totalPackagingAmount}
                     </td>
-                    <td className="px-5 py-4 text-gray-900 font-semibold">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-semibold">
                       {i.grossSalesAmount}
                     </td>
                     <td
-                      className={`px-5 py-4 font-medium ${
+                      className={`px-3 sm:px-5 py-4 font-medium ${
                         i.isCurrentlyAvailable
                           ? 'text-emerald-600'
                           : 'text-red-500'
@@ -697,7 +667,7 @@ export const EmployeePerformancePanel: React.FC<SalesSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [page, setPage] = useState(1);
   const [activityFilter, setActivityFilter] = useState<string>('all');
@@ -820,7 +790,7 @@ export const EmployeePerformancePanel: React.FC<SalesSubTabPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               All Employees Performance
@@ -839,10 +809,10 @@ export const EmployeePerformancePanel: React.FC<SalesSubTabPanelProps> = ({
               <option value="pending">Has Pending Sales</option>
             </select>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(6)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -905,22 +875,22 @@ export const EmployeePerformancePanel: React.FC<SalesSubTabPanelProps> = ({
                     key={`${e.emailAddress}-${index}`}
                     className="hover:bg-gray-50"
                   >
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {fullName(e)}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {e.emailAddress || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {safeNumber(e.numberOfOrders).toLocaleString()}
                     </td>
-                    <td className="px-5 py-4 text-amber-500">
+                    <td className="px-3 sm:px-5 py-4 text-amber-500">
                       {e.pendingSales}
                     </td>
-                    <td className="px-5 py-4 text-emerald-600">
+                    <td className="px-3 sm:px-5 py-4 text-emerald-600">
                       {e.confirmedSales}
                     </td>
-                    <td className="px-5 py-4 text-gray-900 font-semibold">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-semibold">
                       {e.totalSales}
                     </td>
                   </tr>
@@ -945,7 +915,7 @@ export const CategoryPerformancePanel: React.FC<SalesSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [page, setPage] = useState(1);
   const exportHandlers = buildExportHandlers(onExport);
@@ -1076,14 +1046,14 @@ export const CategoryPerformancePanel: React.FC<SalesSubTabPanelProps> = ({
         />
       </div>
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <h3 className="text-base font-semibold text-gray-900">
             All categories and Order Volumes
           </h3>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(5)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -1136,19 +1106,19 @@ export const CategoryPerformancePanel: React.FC<SalesSubTabPanelProps> = ({
               ) : (
                 pageRows.map((c) => (
                   <tr key={c.categoryName} className="hover:bg-gray-50">
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {c.categoryName}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {safeNumber(c.totalOrders).toLocaleString()}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {safeNumber(c.totalItemsSold).toLocaleString()}
                     </td>
-                    <td className="px-5 py-4 text-gray-900 font-semibold">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-semibold">
                       {c.totalAmount}
                     </td>
-                    <td className="px-5 py-4 text-primaryColor font-semibold">
+                    <td className="px-3 sm:px-5 py-4 text-primaryColor font-semibold">
                       {c.percentageOfTotalSales}
                     </td>
                   </tr>
@@ -1182,7 +1152,7 @@ export const OrderPaymentSummaryPanel: React.FC<SalesSubTabPanelProps> = ({
   data,
   isLoading,
   onExport,
-  isExporting,
+  exportingType,
 }) => {
   const [statusTab, setStatusTab] = useState<string>('all');
   const [page, setPage] = useState(1);
@@ -1319,7 +1289,7 @@ export const OrderPaymentSummaryPanel: React.FC<SalesSubTabPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               Order Payment Summary
@@ -1339,10 +1309,10 @@ export const OrderPaymentSummaryPanel: React.FC<SalesSubTabPanelProps> = ({
               ))}
             </select>
           </div>
-          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+          <ExportButtons {...exportHandlers} exportingType={exportingType} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(9)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -1423,24 +1393,24 @@ export const OrderPaymentSummaryPanel: React.FC<SalesSubTabPanelProps> = ({
               ) : (
                 pageRows.map((o) => (
                   <tr key={o.orderId} className="hover:bg-gray-50">
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {moment(o.orderDate).format('MMM DD, hh:mma')}
                     </td>
-                    <td className="px-5 py-4 text-gray-700 font-mono text-xs">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700 font-mono text-xs">
                       {o.orderId}
                     </td>
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {o.customer || 'anonymous'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">{o.orderTotal}</td>
-                    <td className="px-5 py-4 text-emerald-600">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">{o.orderTotal}</td>
+                    <td className="px-3 sm:px-5 py-4 text-emerald-600">
                       {o.totalPaid}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {o.totalRefunded}
                     </td>
                     <td
-                      className={`px-5 py-4 ${
+                      className={`px-3 sm:px-5 py-4 ${
                         parseAmount(o.outstanding) > 0
                           ? 'text-red-500 font-semibold'
                           : 'text-gray-700'
@@ -1449,14 +1419,14 @@ export const OrderPaymentSummaryPanel: React.FC<SalesSubTabPanelProps> = ({
                       {o.outstanding}
                     </td>
                     <td
-                      className={`px-5 py-4 font-medium ${paymentStatusClass(
+                      className={`px-3 sm:px-5 py-4 font-medium ${paymentStatusClass(
                         o.paymentStatus
                       )}`}
                     >
                       {o.paymentStatus}
                     </td>
                     <td
-                      className={`px-5 py-4 font-medium ${orderStatusClass(
+                      className={`px-3 sm:px-5 py-4 font-medium ${orderStatusClass(
                         o.orderStatus
                       )}`}
                     >

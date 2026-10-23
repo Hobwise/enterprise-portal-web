@@ -120,12 +120,12 @@ const EditVarietyModal = ({
 
                 {/* Content */}
                 <div className="">
-                  <div className="p-6 ">
+                  <div className="p-3 sm:p-6 ">
                     <div className="flex items-center gap-2 mb-6">
                       <div className="w-8 h-8 bg-[#5F35D2]/10 rounded-lg flex items-center justify-center">
                         <Star className="w-4 h-4 text-[#5F35D2]" />
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-800">Edit Variety</h3>
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-800">Edit Variety</h3>
                     </div>
                     
                     <div className="space-y-4">
@@ -173,7 +173,7 @@ const EditVarietyModal = ({
                             onChange={(e) => setVarietyQuantity(e.target.value)}
                             placeholder="Optional"
                             min="0"
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+                            className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
                           />
                           {varietyQuantity && (selectedItem?.unitName || selectedItem?.unitCode) && (
                             <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-[#667085] font-medium">
@@ -188,19 +188,19 @@ const EditVarietyModal = ({
               </div>
             </ModalBody>
 
-            <ModalFooter className="px-8 pb-8 pt-0">
+            <ModalFooter className="px-3 sm:px-8 pb-3 sm:pb-8 pt-0">
               <div className="flex justify-end gap-4 w-full">
                 <button
                   onClick={handleClose}
                   disabled={loading}
-                  className="px-8 py-3 border flex-1 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 font-semibold transition-all duration-200 transform hover:scale-105"
+                  className="px-3 sm:px-8 py-2 sm:py-3 border flex-1 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 font-semibold transition-all duration-200 transform hover:scale-105"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleUpdateVariety}
                   disabled={loading || !varietyName || !varietyPrice}
-                  className="px-8 py-3 bg-[#5F35D2]  text-white rounded-xl hover:from-[#5F35D2]/90 hover:to-[#7C69D8]/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  className="px-3 sm:px-8 py-2 sm:py-3 bg-[#5F35D2]  text-white rounded-xl hover:from-[#5F35D2]/90 hover:to-[#7C69D8]/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
                 >
                   {loading ? (
                     <div className="flex items-center gap-2">

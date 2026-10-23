@@ -100,13 +100,13 @@ const CreateVarietyModal = ({
                 {/* Content */}
                 <div className="">
                   {/* Item Preview Card */}
-                  <div className="p-6  mb-6">
+                  <div className="p-3 sm:p-6 mb-6">
                     <div className="flex items-center gap-2 mb-4">
                       <div className="w-10 h-10 bg-[#5F35D2]/10 rounded-lg flex items-center justify-center">
                         <Star className="w-7 h-7 text-[#5F35D2]" />
                       </div>
                         <div>
-                      <h2 className="text-lg text-gray-800 font-bold">
+                      <h2 className="text-base sm:text-lg text-gray-800 font-bold">
                         Create Variety
                       </h2>
                       <p className="text-gray-700 text-xs mt-1">
@@ -115,7 +115,7 @@ const CreateVarietyModal = ({
                     </div>
                     </div>
                     
-                    <div className="flex items-center gap-4 p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+                    <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-100">
                       <img
                         src={
                           selectedItem.image && selectedItem.image.trim() !== ''
@@ -125,16 +125,16 @@ const CreateVarietyModal = ({
                             : '/assets/images/no-image.svg'
                         }
                         alt={selectedItem.name}
-                        className="w-16 h-16 rounded-lg object-cover"
+                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg object-cover shrink-0"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = '/assets/images/no-image.svg';
                         }}
                       />
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-gray-900 truncate">
                           {selectedItem.name}
                         </h4>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 truncate">
                           {selectedItem.category}
                         </p>
                         <p className="font-semibold text-[#5F35D2]">
@@ -153,12 +153,12 @@ const CreateVarietyModal = ({
                   </div>
 
                   {/* Variety Form */}
-                  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                  <div className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border border-gray-100">
                     <div className="flex items-center gap-2 mb-6">
                       <div className="w-8 h-8 bg-[#5F35D2]/10 rounded-lg flex items-center justify-center">
                         <Plus className="w-4 h-4 text-[#5F35D2]" />
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-800">Variety Information</h3>
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-800">Variety Information</h3>
                     </div>
                     
                     <div className="space-y-4">
@@ -174,7 +174,7 @@ const CreateVarietyModal = ({
                             setVarietyName(e.target.value);
                             if (showErrors) setShowErrors(false);
                           }}
-                          className={`w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 ${
+                          className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 ${
                             showErrors && !varietyName.trim() 
                               ? 'border-red-500 ring-1 ring-red-500 bg-red-50' 
                               : ''
@@ -203,7 +203,7 @@ const CreateVarietyModal = ({
                               setVarietyPrice(e.target.value);
                               if (showErrors) setShowErrors(false);
                             }}
-                            className={`w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 ${
+                            className={`w-full pl-10 pr-3 py-2.5 sm:pl-10 sm:pr-4 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 ${
                               showErrors && !varietyPrice.trim() 
                                 ? 'border-red-500 ring-1 ring-red-500 bg-red-50' 
                                 : ''
@@ -230,7 +230,7 @@ const CreateVarietyModal = ({
                             onChange={(e) => setVarietyQuantity(e.target.value)}
                             placeholder="Optional"
                             min="0"
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+                            className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
                           />
                           {varietyQuantity && (selectedItem?.unitName || selectedItem?.unitCode) && (
                             <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-[#667085] font-medium">
@@ -245,11 +245,11 @@ const CreateVarietyModal = ({
               </div>
             </ModalBody>
             
-            <ModalFooter className="px-8 pb-8 pt-0">
+            <ModalFooter className="px-3 sm:px-8 pb-3 sm:pb-8 pt-0">
               <div className="flex justify-end gap-4 w-full">
                 <button
                   onClick={backToItemDetails}
-                  className="px-8 py-3 border flex-1 border-gray-200 text-sm text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 font-semibold  transition-all duration-200 transform hover:scale-105"
+                  className="px-3 sm:px-8 py-2 sm:py-3 border flex-1 border-gray-200 text-sm text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 font-semibold  transition-all duration-200 transform hover:scale-105"
                   disabled={loading}
                 >
                   <div className="flex items-center gap-2">
@@ -260,7 +260,7 @@ const CreateVarietyModal = ({
                 <button
                   onClick={handleSaveVariety}
                   disabled={loading}
-                  className="px-8 py-3 bg-[#5F35D2] text-white text-sm rounded-xl hover:from-[#5F35D2]/90 hover:to-[#7C69D8]/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  className="px-3 sm:px-8 py-2 sm:py-3 bg-[#5F35D2] text-white text-sm rounded-xl hover:from-[#5F35D2]/90 hover:to-[#7C69D8]/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
                 >
                   {loading ? (
                     <div className="flex items-center gap-2">

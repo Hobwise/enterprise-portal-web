@@ -1,7 +1,9 @@
 'use client';
 import { getOrderCategories, getOrderDetails } from '@/app/api/controllers/dashboard/orders';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
+import { isNetworkOnline } from '@/lib/connectivity';
+import { PersistentCache } from '@/lib/persistentCache';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useGlobalContext } from '../globalProvider';
 import { fetchQueryConfig } from "@/lib/queryConfig";
 import { useEffect, useRef } from 'react';
@@ -27,14 +29,20 @@ type OrderCategory = {
   orders: OrderItem[];
 };
 
-// Global cache for orders data to persist across status/page switches
-const globalOrdersCache = new Map<string, {
+// Orders grouped by status/filter/page. Persisted so the rows a user was
+// looking at survive a reload — offline that is the difference between their
+// last view and an error banner. The library scopes the stored bucket by
+// business id, so switching business never surfaces another one's orders.
+type CachedOrdersPage = {
   items: any,
   timestamp: number,
   totalPages: number,
   totalItems: number,
   currentPage: number
-}>();
+};
+const globalOrdersCache = new PersistentCache<CachedOrdersPage>('orders', {
+  maxEntries: 40,
+});
 const CACHE_EXPIRY_TIME = 10 * 60 * 1000; // 10 minutes
 
 
@@ -71,10 +79,14 @@ const useOrder = (
 
     // Check cache first - but skip cache for pagination to ensure fresh data
     const cached = globalOrdersCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < CACHE_EXPIRY_TIME) {
-      // Only use cache if it's for the exact same page request
-      // This prevents stale data when navigating between pages
-      if (cached.currentPage === page) {
+    if (cached) {
+      const isFresh = Date.now() - cached.timestamp < CACHE_EXPIRY_TIME;
+      // Only use a cache entry for the exact same page request (so pagination
+      // stays honest). Offline an expired entry is still the best answer: the
+      // rows this sub-tab showed earlier beat a request that cannot succeed —
+      // networkMode 'offlineFirst' runs this function once even with no
+      // connection, which is where this branch matters.
+      if ((isFresh || !isNetworkOnline()) && cached.currentPage === page) {
         return cached.items;
       }
     }
@@ -137,11 +149,16 @@ const useOrder = (
 
     } catch (error) {
       console.error('Error loading orders:', error);
-      return { categories: [], details: [], salesSummary: null };
+      // The controller already rethrows network-level failures (offline, DNS,
+      // timeout). Let them reach React Query so the page surfaces a retry /
+      // stale-data banner instead of a silent "No orders found". Same-page data
+      // stays visible via placeholderData + React Query's retained cache, and
+      // previously-visited pages are still served by the Map cache above.
+      throw error;
     }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<any>({
+  const { data, isLoading, isError, refetch, dataUpdatedAt, isFetching } = useQuery<any>({
     queryKey: [
       "orders",
       { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
@@ -150,7 +167,8 @@ const useOrder = (
 
       ...fetchQueryConfig(options),
       refetchOnWindowFocus: false,
-      staleTime: 0, // Always consider data stale to ensure refetch on page/date changes
+      staleTime: 30 * 1000, // 30s — keeps lists near-live without refetch-on-every-mount churn
+      placeholderData: keepPreviousData, // keep the current rows visible while a refresh runs
       gcTime: 5 * 60 * 1000, // Cache for 5 minutes
       enabled: options?.enabled !== false,
 
@@ -188,6 +206,8 @@ const useOrder = (
     isLoading,
     isError,
     refetch,
+    dataUpdatedAt,
+    isFetching,
     clearCache,
     clearAllCache,
   };

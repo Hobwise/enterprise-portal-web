@@ -71,28 +71,45 @@ const AddItemModal = ({
   handleCreateMenuItem,
 }: AddItemModalProps) => {
   return (
-    <Modal isOpen={isOpen} size="5xl" onOpenChange={onOpenChange} hideCloseButton>
-      <ModalContent className="bg-white rounded-2xl shadow-2xl border border-gray-200">
-        {() => (
+    <Modal
+      isOpen={isOpen}
+      size="5xl"
+      onOpenChange={onOpenChange}
+      hideCloseButton
+      scrollBehavior="inside"
+    >
+      <ModalContent className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-full">
+        {(onClose) => (
           <>
             <ModalBody className="p-0">
-              <div className="bg-white rounded-2xl w-full max-h-[90vh] overflow-y-auto">
+              {/* Mobile close affordance — the modal has no header, so on small
+                  screens tapping the backdrop is otherwise the only way out */}
+              <button
+                type="button"
+                onClick={() => onClose()}
+                aria-label="Close add item modal"
+                className="sm:hidden absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm backdrop-blur transition-colors hover:bg-gray-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="bg-white rounded-2xl w-full overflow-y-auto">
               
 
-                <div className="p-8">
+                <div className="p-4 sm:p-8">
 
-                <div className="grid grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
                   {/* Left Column */}
-                  <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
                       <div className="flex items-center gap-2 mb-4">
                         <ShoppingBag className="w-5 h-5 text-[#5F35D2]" />
-                        <h3 className="text-lg font-semibold text-gray-800">Add Menu Item</h3>
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-800">Add Menu Item</h3>
                       </div>
 
-                      <div className="space-y-4">
+                      <div className="space-y-3 sm:space-y-4">
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                          <label className="block text-sm font-semibold text-gray-700 mb-1.5 sm:mb-3">
                             Select Menu
                           </label>
                           <div className="relative">
@@ -117,7 +134,7 @@ const AddItemModal = ({
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                          <label className="block text-sm font-semibold text-gray-700 mb-1.5 sm:mb-3">
                             Item name
                           </label>
                           <input
@@ -130,7 +147,7 @@ const AddItemModal = ({
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                          <label className="block text-sm font-semibold text-gray-700 mb-1.5 sm:mb-3">
                             Price (₦)
                           </label>
                           <div className="relative">
@@ -146,7 +163,7 @@ const AddItemModal = ({
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                          <label className="block text-sm font-semibold text-gray-700 mb-1.5 sm:mb-3">
                             Quantity per Sale
                           </label>
                           <div className="relative">
@@ -167,14 +184,14 @@ const AddItemModal = ({
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                          <label className="block text-sm font-semibold text-gray-700 mb-1.5 sm:mb-3">
                             Description
                           </label>
                           <textarea
                             value={itemDescription}
                             onChange={(e) => setItemDescription(e.target.value)}
                             placeholder="Describe your item..."
-                            rows={4}
+                            rows={3}
                             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] resize-none text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
                           />
                         </div>
@@ -183,11 +200,11 @@ const AddItemModal = ({
                   </div>
 
                   {/* Right Column */}
-                  <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
                       <div className="flex items-center gap-2 mb-4">
                         <Upload className="w-5 h-5 text-[#5F35D2]" />
-                        <h3 className="text-lg font-semibold text-gray-800">Item Image</h3>
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-800">Item Image</h3>
                       </div>
 
                       <div
@@ -208,7 +225,7 @@ const AddItemModal = ({
                             <img
                               src={imagePreview}
                               alt="Preview"
-                              className="w-full h-60 object-cover rounded-lg shadow-sm"
+                              className="w-full h-44 sm:h-60 object-cover rounded-lg shadow-sm"
                             />
                             <button
                               onClick={handleRemoveItemImage}
@@ -221,21 +238,21 @@ const AddItemModal = ({
                             </div>
                           </div>
                         ) : (
-                          <div className="flex flex-col items-center justify-center p-8 min-h-[280px]">
-                            <div className="w-16 h-16 bg-[#5F35D2]/10 rounded-2xl flex items-center justify-center mb-4">
+                          <div className="flex flex-col items-center justify-center p-5 sm:p-8 min-h-[160px] sm:min-h-[280px]">
+                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#5F35D2]/10 rounded-2xl flex items-center justify-center mb-3 sm:mb-4">
                               {isUploadingItemImage ? (
                                 <Spinner size="lg" color="secondary" />
                               ) : (
-                                <Upload className="w-8 h-8 text-[#5F35D2]" />
+                                <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-[#5F35D2]" />
                               )}
                             </div>
                             
                             {!isUploadingItemImage && (
                               <>
-                                <h4 className="text-lg font-semibold text-gray-700 mb-2">
+                                <h4 className="text-base sm:text-lg font-semibold text-gray-700 mb-2">
                                   Upload item image
                                 </h4>
-                                <p className="text-sm text-gray-500 text-center mb-4 max-w-xs">
+                                <p className="text-sm text-gray-500 text-center mb-3 sm:mb-4 max-w-xs">
                                   Drag and drop your image here, or{' '}
                                   <label className="text-[#5F35D2] cursor-pointer hover:text-[#7C69D8] font-semibold underline">
                                     browse files
@@ -271,10 +288,10 @@ const AddItemModal = ({
                 </div>
 
                 {/* Modal Actions */}
-                <div className="flex justify-end gap-4 ">
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-4">
                   <button
                     onClick={() => onOpenChange(false)}
-                    className="px-8 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 font-semibold transition-all duration-200 transform hover:scale-105"
+                    className="w-full sm:w-auto px-8 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 font-semibold transition-all duration-200 transform hover:scale-105"
                     disabled={loading}
                   >
                     Cancel
@@ -282,7 +299,7 @@ const AddItemModal = ({
                   <button
                     onClick={handleCreateMenuItem}
                     disabled={loading}
-                    className="px-8 py-3 bg-[#5F35D2] text-white rounded-xl hover:from-[#5F35D2]/90 hover:to-[#7C69D8]/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    className="w-full sm:w-auto px-8 py-3 bg-[#5F35D2] text-white rounded-xl hover:from-[#5F35D2]/90 hover:to-[#7C69D8]/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
                   >
                     {loading ? (
                       <div className="flex items-center gap-2">

@@ -312,7 +312,8 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
       setIsLoadingMore(false);
       isLoadingRef.current = false;
     }
-  }, [isMobile, page, getCurrentPageData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMobile, getCurrentPageData]);
 
   // IntersectionObserver for mobile infinite scroll
   useEffect(() => {

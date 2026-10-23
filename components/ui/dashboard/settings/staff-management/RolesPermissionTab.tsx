@@ -118,7 +118,7 @@ const RolesPermissionTab = () => {
         </div>
       ) : (
         <div className="w-full border border-divider rounded-lg overflow-hidden">
-          <div className="grid grid-cols-3 px-4 py-4 text-default-500 text-xs border-b border-divider bg-grey300">
+          <div className="grid grid-cols-3 gap-2 px-3 sm:px-4 py-4 text-default-500 text-xs border-b border-divider bg-grey300">
             <div className="col-span-1 font-medium uppercase">
               ACTIONS
             </div>
@@ -154,7 +154,7 @@ const RolesPermissionTab = () => {
                       key={permission.key}
                       className="border-b border-divider last:border-b-0 hover:bg-gray-50 transition-colors"
                     >
-                      <div className="grid grid-cols-3 text-sm items-center px-4 py-3 h-[60px]">
+                      <div className="grid grid-cols-3 gap-2 text-sm items-center px-3 sm:px-4 py-3 min-h-[60px]">
                         <div className="col-span-1 text-textGrey">
                           {permission.label}
                         </div>

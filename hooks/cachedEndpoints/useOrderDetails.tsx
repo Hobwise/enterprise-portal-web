@@ -1,5 +1,5 @@
 'use client';
-import { getOrder } from '@/app/api/controllers/dashboard/orders';
+import { fetchOrderDetails } from '@/lib/orderDetailsCache';
 import { useQuery } from '@tanstack/react-query';
 import { fetchQueryConfig } from "@/lib/queryConfig";
 
@@ -20,10 +20,10 @@ const useOrderDetails = (
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['orderDetails', orderId],
     queryFn: () => {
-      if (!isValidOrderId) {
+      if (!isValidOrderId || !orderId) {
         throw new Error('Invalid order ID provided');
       }
-      return getOrder(orderId);
+      return fetchOrderDetails(orderId);
     },
     ...fetchQueryConfig(),
     placeholderData: undefined, // Disable placeholderData to prevent showing wrong data when orderId changes
@@ -31,12 +31,17 @@ const useOrderDetails = (
     enabled: isEnabled,
   });
 
+  // `fetchOrderDetails` mirrors the axios response (`{ data: body }`), but its
+  // return type is intentionally loose; normalise here so callers keep the same
+  // `{ orderDetails, isSuccessful, error }` shape they had before.
+  const body = (data as any)?.data;
+
   return {
-    orderDetails: data?.data?.data || null,
+    orderDetails: body?.data || null,
     isLoading,
     isError,
-    isSuccessful: data?.data?.isSuccessful || false,
-    error: data?.data?.error || null,
+    isSuccessful: body?.isSuccessful || false,
+    error: body?.error || null,
     refetch,
   };
 };

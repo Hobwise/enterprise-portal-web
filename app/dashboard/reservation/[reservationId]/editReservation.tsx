@@ -215,6 +215,7 @@ const EditReservation = ({
         wrapper: "overflow-hidden z-[9999]",
       }}
       size="5xl"
+      scrollBehavior="inside"
       isOpen={isOpenEdit}
       onOpenChange={() => {
         setReservationState({
@@ -334,7 +335,7 @@ const EditReservation = ({
                     placeholder="Add a description"
                   />
                   <Spacer y={6} />
-                  <div className="flex gap-6">
+                  <div className="flex lg:flex-row flex-col gap-6">
                     <CustomInput
                       type="text"
                       disabled={true}
@@ -494,9 +495,9 @@ const EditReservation = ({
                 </div>
               </div>
             </ModalBody>
-            <ModalFooter>
+            <ModalFooter className="flex-col sm:flex-row">
               <CustomButton
-                className="w-32 mb-3 font-bold text-white"
+                className="w-full sm:w-32 mb-3 font-bold text-white"
                 loading={isLoading}
                 onClick={updateReservation}
                 type="submit"

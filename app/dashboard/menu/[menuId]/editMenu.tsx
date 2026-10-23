@@ -158,7 +158,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
         {(onClose) => (
           <>
             <ModalBody>
-              <h1 className="text-xl mt-3 font-[600] text-black">
+              <h1 className="text-lg sm:text-xl mt-3 font-[600] text-black">
                 Edit menu items
               </h1>
               <div className="flex lg:flex-row flex-col gap-6 lg:h-[450px] h-full">
