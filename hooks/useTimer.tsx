@@ -8,9 +8,10 @@ const useCountdown = (
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
-      const difference = targetDate?.getTime() - now.getTime();
+      const target = targetDate ? new Date(targetDate) : null;
+      const difference = target?.getTime() - now.getTime();
 
-      if (difference > 0) {
+      if (difference > 0 && target) {
         setTimeLeft(difference);
       } else {
         clearInterval(interval);

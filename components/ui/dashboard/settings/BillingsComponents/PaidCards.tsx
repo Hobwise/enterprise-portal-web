@@ -82,14 +82,41 @@ export const PaidCards: React.FC<PaidCardsData> = ({
 
   //*================== MANAGE SUBSCRIPTION ==================
 
-  const manageYourSubscription = async () => {
+const manageYourSubscription = async () => {
     setLoadingModal(true);
     const token = getJsonItemFromLocalStorage("userInformation").token;
-    const data = await manageSubscriptionv2(businessID, token);
-    if (data !== null && data.error == null) {
-      setManageSubUrl(data?.data);
 
+    // Check if user has active plan details first
+    const hasActivePlan = currentSubscriptionDetails?.subscription?.status === 'active' ||
+      currentSubscriptionDetails?.plan !== undefined;
+
+    // If user has active plan details, show info and don't open modal
+    if (hasActivePlan) {
+      // User has active plan - show info message instead of modal
+      notify({
+        title: "Subscription",
+        text: "You can Manage subscriptions when billing is added on the next payment",
+        type: "info",
+      });
+      setLoadingModal(false);
+      return;
+    }
+
+    // No active plan or no subscription data - try to get manage link
+    const data = await manageSubscriptionv2(businessID, token);
+
+    // Only open modal if we have a valid manage link URL
+    if (data && data?.data) {
+      setManageSubUrl(data?.data);
       triggerModal();
+    } else {
+      // No manage link available - show info and don't open modal
+      notify({
+        title: "Subscription",
+        text: "You can Manage subscriptions when billing is added on the next payment",
+        type: "info",
+      });
+      setLoadingModal(false);
     }
   };
 
