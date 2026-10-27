@@ -1,14 +1,15 @@
 'use client';
 import { getPricings } from '@/app/api/controllers/landingPage';
 import { CustomButton } from '@/components/customButton';
-import { formatKey, formatNumber } from '@/lib/utils';
+import { formatKey } from '@/lib/utils';
 import { SIGN_UP_URL } from '@/utilities/routes';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { FiArrowRight } from 'react-icons/fi';
 import { PiCheckCircle } from 'react-icons/pi';
 import PricingLoading from '../skeleton-loading';
-import { SwitchPlan } from '../pricing';
+// Billing toggle temporarily hidden along with plan pricing — uncomment to re-enable.
+// import { SwitchPlan } from '../pricing';
 
 const UNLIMITED_USERS = 2147483647;
 
@@ -58,13 +59,14 @@ const toPlans = (pricings: Record<string, any>): Plan[] =>
         popular: meta.popular,
         features: Object.entries(plan)
           .filter(([feature, enabled]) => feature.startsWith('canAccess') && enabled)
+          // Campaigns management temporarily hidden from plan cards — remove this filter to re-enable.
+          .filter(([feature]) => feature !== 'canAccessCampaigns')
           .map(([feature]) => formatKey(feature)),
       };
     });
 
 export default function PricingSection() {
   const [pricings, setPricings] = useState<Record<string, any> | null>(null);
-  const [billing, setBilling] = useState<string>('monthly');
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -103,9 +105,10 @@ export default function PricingSection() {
       ) : (
         plans.length > 0 && (
           <>
-            <div className='mt-12'>
+            {/* Billing toggle temporarily hidden along with plan pricing — uncomment to re-enable. */}
+            {/* <div className='mt-12'>
               <SwitchPlan plan={billing} setPlan={setBilling} />
-            </div>
+            </div> */}
 
             <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10 text-left items-start'>
               {plans.map((plan) => (
@@ -120,12 +123,13 @@ export default function PricingSection() {
                   </div>
 
                   <div className='space-y-1 border-b border-[#E0E0EA] pb-6'>
-                    <p className='text-[#161618] font-bricolage_grotesque font-semibold text-[32px]'>
+                    {/* Plan pricing temporarily hidden — uncomment to re-enable. */}
+                    {/* <p className='text-[#161618] font-bricolage_grotesque font-semibold text-[32px]'>
                       ₦{formatNumber(billing === 'monthly' ? plan.monthlyFee : plan.yearlyFee)}
                       <span className='text-[#44444A] font-normal text-base'>
                         /{billing === 'monthly' ? 'month' : 'year'}
                       </span>
-                    </p>
+                    </p> */}
                     <p className='text-[#44444A] text-sm'>{plan.limits}</p>
                   </div>
 
