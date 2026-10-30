@@ -24,6 +24,7 @@ import { MdVerified } from "react-icons/md";
 import { cn, getJsonItemFromLocalStorage, notify, formatNumber } from "@/lib/utils";
 import { initializeTransactionv2 } from "@/app/api/controllers/dashboard/settings";
 import { forceTokenRefresh } from "@/app/api/apiService";
+import { trackSubscriptionCompleted } from "@/lib/posthogAnalytics";
 // import PaystackPop from 'paystack-inline-ts';
 import PaystackPop from "paystack-inline-ts";
 import { usePaystackPayment } from "react-paystack";
@@ -184,9 +185,13 @@ export const PricingCards: React.FC<PlansFromParent> = ({
           // the next request. Either way we reload so the UI reflects the new plan.
           try {
             await forceTokenRefresh();
+            trackSubscriptionCompleted(
+              getPlanName(selectedPlan) || 'unknown'
+            );
           } catch {
             // Refresh failed — swallow the error and let the page reload with the
-            // existing token. The axios interceptor will handle re-authentication.
+            // existing token. The interceptor will refresh it lazily on the
+            // next request. Either way we reload so the UI reflects the new plan.
           }
           window.location.reload();
         };

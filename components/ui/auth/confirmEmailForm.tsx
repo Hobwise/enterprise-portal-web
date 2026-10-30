@@ -53,6 +53,7 @@ const ConfirmEmailForm = () => {
       // This is the first point in the signup flow we have a real backend id,
       // so this is the conversion step: identify + "signed up" + flush.
       trackSignUp(data?.data?.data);
+      trackSignUpCompleted('email');
 
       router.push("/auth/business-information");
     } else if (data?.data?.error) {
