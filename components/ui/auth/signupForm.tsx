@@ -5,7 +5,7 @@ import { CustomButton } from '@/components/customButton';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import { notify, clearAppStorage } from '@/lib/utils';
 import { saveSignupReferralCode } from '@/lib/referral';
-import { trackSignUpStarted } from '@/lib/posthogAnalytics';
+import { trackSignUpStarted, trackSignUpCompleted } from '@/lib/posthogAnalytics';
 import { Spacer, Tooltip } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';

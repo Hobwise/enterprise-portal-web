@@ -261,6 +261,31 @@ export const trackSignOut = (): void => {
 };
 
 /**
+ * Captures 'sign up completed' event after successful sign up.
+ * Includes the auth method (e.g. 'email', 'google') and optional plan info.
+ */
+export const trackSignUpCompleted = (method: string, plan?: string): void => {
+  if (!isReady()) return;
+  trackEvent('sign up completed', {
+    method,
+    plan,
+  });
+  flushPostHog();
+};
+
+/**
+ * Captures 'subscription completed' event when a user successfully subscribes.
+ * Includes the plan name or identifier.
+ */
+export const trackSubscriptionCompleted = (plan: string): void => {
+  if (!isReady()) return;
+  trackEvent('subscription completed', {
+    plan,
+  });
+  flushPostHog();
+};
+
+/**
  * Clears the identified person so a later sign-in on the same browser starts
  * from a clean anonymous state.
  */
