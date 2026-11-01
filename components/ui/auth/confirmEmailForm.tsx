@@ -5,7 +5,7 @@ import { confirmEmail } from "@/app/api/controllers/auth";
 import { CustomButton } from "@/components/customButton";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import useCountdown from "@/hooks/useTimer";
-import { trackSignUp } from "@/lib/posthogAnalytics";
+import { trackSignUp, trackSignUpCompleted } from "@/lib/posthogAnalytics";
 import { setJsonCookie } from "@/lib/cookies";
 import {
   notify,
