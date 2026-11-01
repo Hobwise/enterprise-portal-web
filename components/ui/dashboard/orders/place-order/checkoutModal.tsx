@@ -689,7 +689,8 @@ const CheckoutModal = ({
   // Verify calculation accuracy
   const verifyCalculation = (
     items: any[],
-    addCost: number = 0
+    addCost: number = 0,
+    isVatApplied: boolean = true
   ): {
     isValid: boolean;
     calculated: number;
@@ -732,9 +733,9 @@ const CheckoutModal = ({
       itemsSubtotal = Math.round(itemsSubtotal * 100) / 100;
       packingSubtotal = Math.round(packingSubtotal * 100) / 100;
 
-      // Use VAT calculation similar to main function
+      // Use VAT calculation similar to main function, respecting isVatApplied flag
       const configVatRate = orderConfiguration?.vatRate ?? 0;
-      const shouldCalculateVat = orderConfiguration?.isVatEnabled ?? true;
+      const shouldCalculateVat = isVatApplied ? (orderConfiguration?.isVatEnabled ?? true) : false;
 
       let vatCalc = 0;
       if (shouldCalculateVat && configVatRate > 0) {
@@ -1035,7 +1036,8 @@ const CheckoutModal = ({
     // Verify calculations
     const calculationVerification = verifyCalculation(
       selectedItems,
-      additionalCost
+      additionalCost,
+      isVatApplied
     );
     if (!calculationVerification.isValid) {
       notify({
@@ -1264,7 +1266,8 @@ const CheckoutModal = ({
     // Verify calculations
     const calculationVerification = verifyCalculation(
       selectedItems,
-      additionalCost
+      additionalCost,
+      isVatApplied
     );
     if (!calculationVerification.isValid) {
       notify({
