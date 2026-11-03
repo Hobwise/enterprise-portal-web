@@ -5,7 +5,7 @@ import { confirmEmail } from "@/app/api/controllers/auth";
 import { CustomButton } from "@/components/customButton";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import useCountdown from "@/hooks/useTimer";
-import { trackSignUp } from "@/lib/posthogAnalytics";
+import { trackSignUp, trackSignUpCompleted } from "@/lib/posthogAnalytics";
 import { setJsonCookie } from "@/lib/cookies";
 import {
   notify,
@@ -53,6 +53,7 @@ const ConfirmEmailForm = () => {
       // This is the first point in the signup flow we have a real backend id,
       // so this is the conversion step: identify + "signed up" + flush.
       trackSignUp(data?.data?.data);
+      trackSignUpCompleted('email');
 
       router.push("/auth/business-information");
     } else if (data?.data?.error) {
