@@ -160,12 +160,6 @@ const buildCachedOrderItems = (response: any, page: number): CachedOrderItems | 
     const parsedPrice = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
     const parsedPacking = typeof item.packingCost === 'number' ? item.packingCost : parseFloat(item.packingCost) || 0;
 
-    // Safeguard localStorage from massive base64 payloads (> 25KB)
-    let image = item.image || '';
-    if (typeof image === 'string' && image.length > 25000 && !image.startsWith('http')) {
-      image = '';
-    }
-
     return {
       ...item,
       id: idStr,
@@ -175,7 +169,7 @@ const buildCachedOrderItems = (response: any, page: number): CachedOrderItems | 
       isAvailable: item.isAvailable !== false,
       count: 0,
       packingCost: parsedPacking,
-      image,
+      image: item.image || '',
     };
   });
 
